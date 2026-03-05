@@ -1,18 +1,22 @@
 import random
+import collections
 from typing import List, Tuple, Optional
+from .exceptions import FortyTwoRenderingError
 
 
 class MazeGenerator:
     """第VI章の要件を完全に満たす迷路生成クラス"""
 
     def __init__(self, width: int, height: int, entry: Tuple[int, int], exit_pos: Tuple[int, int], seed: Optional[int] = None):
+        if not (0 <= entry[0] < width and 0 <= entry[1] < height) or \
+           not (0 <= exit_pos[0] < width and 0 <= exit_pos[1] < height):
+           raise ValueError(f"Invalid entry {entry} or exit {exit_pos} for grid size {width}x{height}")
         self.width = width
         self.height = height
         self.entry = entry
         self.exit_pos = exit_pos
-        if seed is not None:
             random.seed(seed)
-        self.reset_grid()
+        self._reset_grid()
 
     def _open_outer_wall(self, pos: Tuple[int, int]) -> None:
         """
@@ -21,32 +25,33 @@ class MazeGenerator:
         x, y = pos # 入口か出口の座標
 
         # 1. 左端（西）が出口の場合
-        if x == 0:
-            self.grid[y][x]["W"] = False
-        # 2. 右端（東）が出口の場合
-        elif x == self.width - 1:
-            self.grid[y][x]["E"] = False
-        # 3. 上端（北）が出口の場合
-        elif y == 0:
+        if y == 0:
             self.grid[y][x]["N"] = False
-        # 4. 下端（南）が出口の場合
         elif y == self.height - 1:
             self.grid[y][x]["S"] = False
+        # 上下に当てはまらねば、左右をチェックだべ
+        elif x == 0:
+            self.grid[y][x]["W"] = False
+        elif x == self.width - 1:
+            self.grid[y][x]["E"] = False
 
     #壁を壊す関数
     def _break_wall(self, x1: int, y1: int, x2: int, y2: int):
-    """(x1, y1) と (x2, y2) の間の壁を取り除く"""
         if x1 == x2:  # 縦に並んでいる場合
-            if y1 < y2:  # (x1, y1)が上
+            if y1 < y2:  # 下（南）へ
                 self.grid[y1][x1]["S"] = False
                 self.grid[y2][x2]["N"] = False
-            else:        # (x1, y1)が下
+            else:        # 上（北）へ
                 self.grid[y1][x1]["N"] = False
                 self.grid[y2][x2]["S"] = False
         elif y1 == y2:  # 横に並んでいる場合
-            if x1 < x2:  # (x1, y1)が左
+            if x1 < x2:  # 右（東）へ
                 self.grid[y1][x1]["E"] = False
                 self.grid[y2][x2]["W"] = False
+            else:        # 左（西）へ ★ここを追加だべ！
+                self.grid[y1][x1]["W"] = False
+                self.grid[y2][x2]["E"] = False
+
 
     def _creates_square(self, x: int, y: int) -> bool:
         """
@@ -76,6 +81,12 @@ class MazeGenerator:
                 
         return False
 
+    def _is_42_area(self, x: int, y: int) -> bool:
+        """
+        指定された座標 (x, y) が『42』の形を構成する範囲かどうかを判定する
+        """
+        return (x, y) in self.forty_two_coords
+
     def _can_dig(self, nx, ny):
         # 1. そもそも迷路の範囲内だが？
         if not (0 <= nx < self.width and 0 <= ny < self.height):
@@ -103,6 +114,7 @@ class MazeGenerator:
         
         while stack:
             cx, cy = stack[-1] # 今いる場所
+            #print(f"DEBUG: Now at {cx, cy}, stack size: {len(stack)}")            
             
             # 1. 周囲（上下左右）の座標をリストにする
             directions = [(0, -1), (1, 0), (0, 1), (-1, 0)] # 北、東、南、西
@@ -133,7 +145,7 @@ class MazeGenerator:
                 # どこにも行けねぇ（行き止まり）なら、一歩戻る
                 stack.pop()
 
-    def _embed_42_pattern(self)
+    def _embed_42_pattern(self) -> None:
         """
         迷路の真ん中に『42』の形の壁を配置し、掘られないようにマークする
         """
@@ -161,8 +173,9 @@ class MazeGenerator:
         for diff_x, diff_y in shape_4 + shape_2:
             nx_x, nx_y = center_x + diff_x, center_y + diff_y  # 絶対座標に変換
             # 迷路の範囲内であったら集合に加える
-            if 0 <= nx_x < self.width and 0 <= nx_y < self.height:
-                self.forty_two_coords.add((nx_x, nx_y))
+            if not 0 <= nx_x < self.width and 0 <= nx_y < self.height:
+                raise FortyTwoRenderingError("Could not render '42'.")
+            self.forty_two_coords.add((nx_x, nx_y))
 
     def _reset_grid(self) -> None:
         """
@@ -172,7 +185,6 @@ class MazeGenerator:
             [{"N": True, "E": True, "S": True, "W": True} for _ in range(self.width)]
             for _ in range(self.height)
         ]
-
 
     def generate(self, perfect: bool = True) -> None:
         """
@@ -193,12 +205,81 @@ class MazeGenerator:
         self._open_outer_wall(self.entry)
         self._open_outer_wall(self.exit_pos)
 
-    def get_solution(self) -> str:
-        """最短経路を NSEW の文字列で返す"""
-        # ここで幅優先探索（BFS）などを使って経路を見つけるべ
-        return "NNEESW"
+    def get_solution(self):
+        """
+        幅優先探索（BFS）を使って最短経路を見つけ、NSEWの文字列で返すべ！
+        """
+        start = self.entry
+        goal = self.exit_pos
+        
+        # 1. 探索用の準備
+        # queue: 次に調べる場所を入れるもの
+        # parent: 「(今の座標): (一つ前の座標, 進んできた方向)」を記録するもの
+        queue = collections.deque([start])
+        parent = {start: (None, None)} 
+        
+        found = False
+        while queue:
+            cx, cy = queue.popleft()
+            
+            if (cx, cy) == goal:
+                found = True
+                break
+                
+            # 2. 今の場所から「壁がねぇ方向」を探す
+            # 北(N), 南(S), 東(E), 西(W) の順にチェック
+            directions = {
+                "N": (0, -1), "S": (0, 1), 
+                "E": (1, 0), "W": (-1, 0)
+            }
+            
+            for d_name, (dx, dy) in directions.items():
+                nx, ny = cx + dx, cy + dy
+                
+                # 範囲内か？ 
+                if 0 <= nx < self.width and 0 <= ny < self.height:
+                    # ★ここが大事！ 壁が壊れてる（False）かつ、まだ行ってねぇ場所か？
+                    if not self.grid[cy][cx][d_name] and (nx, ny) not in parent:
+                        parent[(nx, ny)] = ((cx, cy), d_name)
+                        queue.append((nx, ny))
+        
+        if not found:
+            return "" # ゴールが見つからねぇ時は空っぽを返すべ
+
+        # 3. ゴールから「親」を辿って逆走するべ！
+        path = []
+        path_coords = [goal]
+        curr = goal
+        while curr != start:
+            prev_pos, direction = parent[curr] # 座標を記録するリスト
+            path.append(direction)
+            path_coords.append(prev_pos) # 座標もどんどん追加するべ
+            curr = prev_pos
+            
+        # 逆順になってるから、ひっくり返して一本の文字列にするべ
+        return "".join(reversed(path)), path_coords[::-1]
 
     def get_hex_representation(self) -> List[List[str]]:
-        """第IV.5章の要件：各セルの壁情報を16進数(0-F)のリストで返す"""
-        # ビット演算を使って 0-F を計算するロジック
-        pass
+        """
+        各セルの壁情報を 0-F の16進数に変換してリストで返す
+        """
+        hex_grid = []
+        
+        for y in range(self.height):
+            row = []
+            for x in range(self.width):
+                # 1. そのマスの壁情報をチェックして、合計値を計算するべ
+                val = 0
+                if self.grid[y][x]["N"]: val += 1
+                if self.grid[y][x]["E"]: val += 2
+                if self.grid[y][x]["S"]: val += 4
+                if self.grid[y][x]["W"]: val += 8
+                
+                # 2. 合計値を16進数（1文字）に変換して、大文字にするべ
+                # hex(15) は '0xf' になるから、最後の1文字だけ取って大文字にすんだ
+                hex_char = hex(val)[2:].upper()
+                row.append(hex_char)
+                
+            hex_grid.append(row)
+            
+        return hex_grid
