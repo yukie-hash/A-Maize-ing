@@ -1,0 +1,31 @@
+[build-system]
+# パッケージをビルドするために必要なツールを指定する
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+# 要件：パッケージ名は mazegen-* にすること
+name = "mazegen-yhamada"
+version = "1.0.0"
+description = "A-Maze-ing maze generation and solver module"
+# 要件：Python 3.10以降を使用すること
+requires-python = ">=3.10"
+authors = [
+    {name = "Your Name", email = "your@email.com"}
+]
+# README.mdの内容をパッケージの説明として使う設定
+readme = "README.md"
+license = {text = "MIT"}
+
+# プロジェクトのカテゴリ（任意だけど書くとプロっぽいべ）
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[tool.setuptools.packages.find]
+# どのフォルダをパッケージとして含めるか指定する
+# これで mazegen フォルダの中身（__init__.py や generator.py）が同梱される
+where = ["."]
+include = ["mazegen*"]
