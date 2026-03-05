@@ -1,6 +1,7 @@
 import random
 import collections
 from typing import List, Tuple, Optional
+from .exceptions import FortyTwoRenderingError
 
 
 class MazeGenerator:
@@ -171,8 +172,9 @@ class MazeGenerator:
         for diff_x, diff_y in shape_4 + shape_2:
             nx_x, nx_y = center_x + diff_x, center_y + diff_y  # 絶対座標に変換
             # 迷路の範囲内であったら集合に加える
-            if 0 <= nx_x < self.width and 0 <= nx_y < self.height:
-                self.forty_two_coords.add((nx_x, nx_y))
+            if not 0 <= nx_x < self.width and 0 <= nx_y < self.height:
+                raise FortyTwoRenderingError("Could not render '42'.")
+            self.forty_two_coords.add((nx_x, nx_y))
 
     def _reset_grid(self) -> None:
         """
@@ -182,7 +184,6 @@ class MazeGenerator:
             [{"N": True, "E": True, "S": True, "W": True} for _ in range(self.width)]
             for _ in range(self.height)
         ]
-
 
     def generate(self, perfect: bool = True) -> None:
         """
@@ -281,19 +282,3 @@ class MazeGenerator:
             hex_grid.append(row)
             
         return hex_grid
-
-    def save_to_file(self, filename: str, path_str: str) -> None:
-        """
-        16進数の迷路データと最短経路をテキストファイルに保存するべ！
-        """
-        # 1. 16進数のリストを取得する
-        hex_data = self.get_hex_representation()
-        
-        with open(filename, "w", encoding="utf-8") as f:
-            # 2. 迷路の各行を16進数で書き出す
-            for row in hex_data:
-                # ["F", "A", "3"] を "FA3" という一本の文字列にして書き込むべ
-                f.write("".join(row) + "\n")
-            
-            # 3. 最後に最短経路（NSEW）を一行書き添える
-            f.write(f"\nSOLUTION={path_str}\n")

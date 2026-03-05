@@ -1,10 +1,10 @@
 # 迷路のサイズ設定
-WIDTH=14
-HEIGHT=5
+WIDTH=10
+HEIGHT=10
 
 # 入口と出口
 ENTRY=0,0
-EXIT=13,4
+EXIT=9,9
 
 # その他の設定
 OUTPUT_FILE=maze_result.txt
