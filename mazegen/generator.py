@@ -15,7 +15,7 @@ class MazeGenerator:
         self.height = height
         self.entry = entry
         self.exit_pos = exit_pos
-            random.seed(seed)
+        random.seed(seed)
         self._reset_grid()
 
     def _open_outer_wall(self, pos: Tuple[int, int]) -> None:

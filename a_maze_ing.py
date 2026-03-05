@@ -133,11 +133,11 @@ def main():
         # 描画の呼び出し（pathを表示するかどうか選んで渡すべ）
         if show_solution == True:
             # 「答えを見せる」設定がONなら
-            current_path = path_coords  # 用意してた「正解の座標リスト」を入れる
+            display_path = path_coords  # 用意してた「正解の座標リスト」を入れる
         else:
             # 「答えを見せる」設定がOFFなら
-            path_coords = []             # 空っぽ（何もなし）を入れるcurrent_path = solution_path if show_solution else []
-        draw_real_maze(maze, path_coords, show_solution, wall_color)
+            display_path = []   # 空っぽ（何もなし）を入れる
+        draw_real_maze(maze, display_path, show_solution, wall_color)
         print("\n[R]再生成 [S]経路切替 [C]色変更 [Q]保存して終了")
         cmd = input("コマンドを入力してください: ").upper()
 
