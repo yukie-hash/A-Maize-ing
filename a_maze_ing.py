@@ -108,7 +108,12 @@ def main():
     exit_pos = tuple(map(int, config["EXIT"].split(',')))
     
     # 3. 迷路の生成
-    maze = MazeGenerator(w, h, entry, exit_pos)
+    try:
+        maze = MazeGenerator(w, h, entry, exit_pos)
+    except ValueError as e:
+        print(f"Error: {e}")
+        exit(1)
+
     try:
         maze.generate(perfect=is_perfect)
     except FortyTwoRenderingError as e:

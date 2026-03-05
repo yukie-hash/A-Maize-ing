@@ -4,7 +4,7 @@ HEIGHT=10
 
 # 入口と出口
 ENTRY=0,0
-EXIT=9,9
+EXIT=9, 8
 
 # その他の設定
 OUTPUT_FILE=maze_result.txt

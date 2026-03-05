@@ -8,11 +8,13 @@ class MazeGenerator:
     """第VI章の要件を完全に満たす迷路生成クラス"""
 
     def __init__(self, width: int, height: int, entry: Tuple[int, int], exit_pos: Tuple[int, int], seed: Optional[int] = None):
+        if not (0 <= entry[0] < width and 0 <= entry[1] < height) or \
+           not (0 <= exit_pos[0] < width and 0 <= exit_pos[1] < height):
+           raise ValueError(f"Invalid entry {entry} or exit {exit_pos} for grid size {width}x{height}")
         self.width = width
         self.height = height
         self.entry = entry
         self.exit_pos = exit_pos
-        if seed is not None:
             random.seed(seed)
         self._reset_grid()
 
@@ -23,17 +25,15 @@ class MazeGenerator:
         x, y = pos # 入口か出口の座標
 
         # 1. 左端（西）が出口の場合
-        if x == 0:
-            self.grid[y][x]["W"] = False
-        # 2. 右端（東）が出口の場合
-        elif x == self.width - 1:
-            self.grid[y][x]["E"] = False
-        # 3. 上端（北）が出口の場合
-        elif y == 0:
+        if y == 0:
             self.grid[y][x]["N"] = False
-        # 4. 下端（南）が出口の場合
         elif y == self.height - 1:
             self.grid[y][x]["S"] = False
+        # 上下に当てはまらねば、左右をチェックだべ
+        elif x == 0:
+            self.grid[y][x]["W"] = False
+        elif x == self.width - 1:
+            self.grid[y][x]["E"] = False
 
     #壁を壊す関数
     def _break_wall(self, x1: int, y1: int, x2: int, y2: int):
@@ -114,6 +114,7 @@ class MazeGenerator:
         
         while stack:
             cx, cy = stack[-1] # 今いる場所
+            #print(f"DEBUG: Now at {cx, cy}, stack size: {len(stack)}")            
             
             # 1. 周囲（上下左右）の座標をリストにする
             directions = [(0, -1), (1, 0), (0, 1), (-1, 0)] # 北、東、南、西
