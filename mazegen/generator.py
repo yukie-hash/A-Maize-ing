@@ -5,9 +5,23 @@ from .exceptions import FortyTwoRenderingError
 
 
 class MazeGenerator:
-    """第VI章の要件を完全に満たす迷路生成クラス"""
+    """
+    迷路生成クラス
+    """
 
     def __init__(self, width: int, height: int, entry: Tuple[int, int], exit_pos: Tuple[int, int], seed: Optional[int] = None):
+        """迷路の情報を初期化する
+
+        Args:
+            width (int): 迷路の幅
+            height (int): 迷路の高さ
+            entry (Tuple[int, int]): 入口の座標
+            exit_pos (Tuple[int, int]): 出口の座標
+            seed (Optional[int], optional): シード値 Defaults to None.
+
+        Raises:
+            ValueError: 入口もしくは出口が迷路の範囲外にあるときのエラー
+        """
         if not (0 <= entry[0] < width and 0 <= entry[1] < height) or \
            not (0 <= exit_pos[0] < width and 0 <= exit_pos[1] < height):
            raise ValueError(f"Invalid entry {entry} or exit {exit_pos} for grid size {width}x{height}")
@@ -17,6 +31,7 @@ class MazeGenerator:
         self.exit_pos = exit_pos
         random.seed(seed)
         self._reset_grid()
+
 
     def _open_outer_wall(self, pos: Tuple[int, int]) -> None:
         """
@@ -35,8 +50,11 @@ class MazeGenerator:
         elif x == self.width - 1:
             self.grid[y][x]["E"] = False
 
-    #壁を壊す関数
+
     def _break_wall(self, x1: int, y1: int, x2: int, y2: int):
+        """
+        壁を壊すメゾット
+        """
         if x1 == x2:  # 縦に並んでいる場合
             if y1 < y2:  # 下（南）へ
                 self.grid[y1][x1]["S"] = False
@@ -55,7 +73,7 @@ class MazeGenerator:
 
     def _creates_square(self, x: int, y: int) -> bool:
         """
-        (x, y) を通路にすると、どこかに2x2の空白ができちまうかチェックするべ
+        (x, y) を通路にすると、どこかに2x2の空白ができてしまはないかをチェックする
         """
         # チェックする4つの「2x2エリア」のオフセット
         # 左上方向、右上方向、左下方向、右下方向
@@ -81,13 +99,18 @@ class MazeGenerator:
                 
         return False
 
+
     def _is_42_area(self, x: int, y: int) -> bool:
         """
         指定された座標 (x, y) が『42』の形を構成する範囲かどうかを判定する
         """
         return (x, y) in self.forty_two_coords
 
+
     def _can_dig(self, nx, ny):
+        """
+        壊してもいい壁かどうかを確認する
+        """
         # 1. そもそも迷路の範囲内だが？
         if not (0 <= nx < self.width and 0 <= ny < self.height):
             return False
@@ -108,8 +131,11 @@ class MazeGenerator:
 
         return True
 
-    #どこをいつどちら向きに掘ればいいかを決める関数
+
     def _drill_maze(self, start_pos: Tuple[int, int], perfect: bool):
+        """
+        どこをいつどちら向きに壁を掘ればいいかを決める関数
+        """
         stack = [start_pos]
         
         while stack:
@@ -147,7 +173,7 @@ class MazeGenerator:
 
     def _embed_42_pattern(self) -> None:
         """
-        迷路の真ん中に『42』の形の壁を配置し、掘られないようにマークする
+        迷路の真ん中に『42』の形の壁を配置し、壊されないようにマークする
         """
         #　整数除算をして中心の座標を割り出す
         center_x, center_y = self.width // 2, self.height // 2
@@ -188,7 +214,7 @@ class MazeGenerator:
 
     def generate(self, perfect: bool = True) -> None:
         """
-        迷路を生成するメインルーチン
+        迷路を生成する
         """
         # 1. 準備：グリッドを「全部壁」でリセット
         self._reset_grid()
@@ -207,7 +233,7 @@ class MazeGenerator:
 
     def get_solution(self):
         """
-        幅優先探索（BFS）を使って最短経路を見つけ、NSEWの文字列で返すべ！
+        幅優先探索（BFS）を使って最短経路を見つけ、座標とNSEWの文字列で返す
         """
         start = self.entry
         goal = self.exit_pos

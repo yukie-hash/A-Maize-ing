@@ -25,43 +25,43 @@ def save_to_file(maze, filename: str, path_str: str) -> None:
 
 
 def draw_real_maze(maze, path_coords, show_solution: bool, wall_color) -> None:
-    hex_grid = maze.get_hex_representation()
-    path_set = set(path_coords) if show_solution else set()
-    
-    # 迷路の「道」の色（基本は黒）
-    bg_path = Back.BLACK
-    
-    for y, row in enumerate(hex_grid):
-        line_top = ""  # マス本体と横の壁
-        line_bot = ""  # 下の壁と角
-        
-        for x, char in enumerate(row):
-            val = int(char, 16)
-            curr_pos = (x, y)
-            
-            # --- 1. マス本体の色を判定 ---
-            if curr_pos == maze.entry:
-                cell_color = Back.MAGENTA  # 入口
-            elif curr_pos == maze.exit_pos:
-                cell_color = Back.RED      # 出口
-            elif curr_pos in path_set:
-                cell_color = Back.LIGHTWHITE_EX # 42/最短経路（明るいグレー）
-            else:
-                cell_color = bg_path       # 普通の道
-            
-            line_top += cell_color + "  "
-            
-            # --- 2. 東(E)の壁 (val & 4) ---
-            line_top += wall_color + "  " if (val & 4) else cell_color + "  "
-            
-            # --- 3. 南(S)の壁 (val & 2) ---
-            line_bot += wall_color + "  " if (val & 2) else cell_color + "  "
-            
-            # --- 4. 右下の角（常に壁にするのが画像に近いべ） ---
-            line_bot += wall_color + "  "
+# ANSIエスケープコード（標準機能だべ）
+    RESET = "\033[0m"
+    BLACK = "\033[40m"    # 通路（黒）
+    ENTRY_CLR = "\033[45m" # 入口（紫）
+    EXIT_CLR = "\033[41m"  # 出口（赤）
+    PATTERN_42 = "\033[48;5;250m" # 「42」用のグレー
 
-        print(line_top)
-        print(line_bot)
+    for y in range(maze.height):
+        # --- 1段目：北側の壁を描く行 ---
+        line1 = ""
+        for x in range(maze.width):
+            # 北(N)か西(W)に壁があれば壁色、なければ通路色
+            is_wall = maze.grid[y][x]["N"] or maze.grid[y][x]["W"]
+            color = wall_color if is_wall else BLACK
+            line1 += f"{color}  {RESET}" # 角と北壁
+        print(line1)
+
+        # --- 2段目：西側の壁と通路（中心）を描く行 ---
+        line2 = ""
+        for x in range(maze.width):
+            # 1. 西側の壁
+            w_color = wall_color if maze.grid[y][x]["W"] else BLACK
+            line2 += f"{w_color} {RESET}" 
+
+            # 2. セルの中心（通路 / 入口 / 出口 / 42 / 経路）
+            target_color = BLACK
+            if (x, y) == maze.entry:
+                target_color = ENTRY_CLR
+            elif (x, y) == maze.exit_pos:
+                target_color = EXIT_CLR
+            elif (x, y) in maze.forty_two_coords: # 42パターンの座標
+                target_color = PATTERN_42
+            elif (x, y) in path_coords: # 最短経路
+                target_color = "\033[44m" # 経路は青とかにするべ
+
+            line2 += f"{target_color} {RESET}"
+        print(line2)
 
 
 def load_config(filename: str) -> dict:
@@ -124,7 +124,7 @@ def main():
     path_str, path_coords = maze.get_solution()
     
     show_solution = True
-    wall_color = Fore.WHITE
+    wall_color = "\033[47m"
 
     # --- 視覚的表現（Visual representation）のループ ---
     while True:
