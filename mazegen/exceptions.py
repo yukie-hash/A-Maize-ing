@@ -1,0 +1,2 @@
+class FortyTwoRenderingError(Exception):
+    pass

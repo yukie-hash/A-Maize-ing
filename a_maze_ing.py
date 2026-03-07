@@ -1,27 +1,94 @@
 from mazegen.generator import MazeGenerator
+import os
+import colorama
+from colorama import Fore, Back, Style
+from mazegen.exceptions import FortyTwoRenderingError
 
 
-def draw_maze(maze, show_path, color):
-    """ターミナルにASCIIで迷路を描画する関数だべ"""
-    path_coords = maze.get_solution_coords() if show_path else []
+def save_to_file(maze, filename: str, path_str: str) -> None:
+    """
+    16進数の迷路データと最短経路をテキストファイルに保存する
+    """
+    # 1. 16進数のリストを取得する
+    hex_data = maze.get_hex_representation()
+        
+    with open(filename, "w", encoding="utf-8") as f:
+        # 2. 迷路の各行を16進数で書き出す
+        for row in hex_data:
+            # ["F", "A", "3"] を "FA3" という一本の文字列にして書き込むべ
+            f.write("".join(row) + "\n")
+
+        f.write(f"\n{maze.entry[0]},{maze.entry[1]}\n")
+        f.write(f"{maze.exit_pos[0]},{maze.exit_pos[1]}\n")
+        # 3. 最後に最短経路（NSEW）を一行書き添える
+        f.write(f"\n{path_str}\n")
+
+
+def draw_real_maze(maze, path_coords, show_solution: bool, wall_color) -> None:
+    # ANSIエスケープコード（標準機能だべ）
+    RESET = "\033[0m"
+    BLACK = "\033[40m"    # 通路（黒）
+    ENTRY_CLR = "\033[45m" # 入口（紫）
+    EXIT_CLR = "\033[41m"  # 出口（赤）
+    PATTERN_42 = "\033[48;5;250m" # 「42」用のグレー
+
+    # 横と縦それぞれ2回描くとセルが正方形に見える
+    horiz_repeat = 2
+    vert_repeat = 1
+    # 必要に応じて vert_repeat=1 で縦方向のみ1行にする
 
     for y in range(maze.height):
-        line = ""
+        # --- 1段目：北側の壁を描く行 ---
+        line1 = ""
         for x in range(maze.width):
-            # 優先順位をつけて描画する文字を決めるべ
+            # 北(N)か西(W)に壁があれば壁色、なければ通路色
+            is_wall = maze.grid[y][x]["N"]
+            color = wall_color if is_wall else BLACK
+            # 各セルパーツを横方向に繰り返す
+            line1 += (f"{color}  {RESET}" * horiz_repeat)
+        # 右端に東側の壁を1つ追加
+        e_wall = maze.grid[y][maze.width-1]["E"]
+        line1 += (f"{wall_color if e_wall else BLACK} {RESET}" * horiz_repeat)
+        for _ in range(vert_repeat):
+            print(line1)
+
+        # --- 2段目：西側の壁と通路（中心）を描く行 ---
+        line2 = ""
+        for x in range(maze.width):
+            # 1. 西側の壁
+            w_color = wall_color if maze.grid[y][x]["W"] else BLACK
+            line2 += (f"{w_color} {RESET}" * horiz_repeat) 
+
+            # 2. セルの中心（通路 / 入口 / 出口 / 42 / 経路）
+            target_color = BLACK
             if (x, y) == maze.entry:
-                line += Fore.MAGENTA + "IN"
+                target_color = ENTRY_CLR
             elif (x, y) == maze.exit_pos:
-                line += Fore.MAGENTA + "OUT"
-            elif (x, y) in path_coords:
-                line += Fore.RED + "● " # 最短経路
-            elif hasattr(maze, 'is_42') and maze.is_42(x, y):
-                line += Fore.YELLOW + "42" # 42パターン（オプション）
-            elif maze.is_wall(x, y):
-                line += color + "██" # 壁
-            else:
-                line += "  " # 通路
-        print(line)
+                target_color = EXIT_CLR
+            elif (x, y) in maze.forty_two_coords: # 42パターンの座標
+                target_color = PATTERN_42
+            elif (x, y) in path_coords: # 最短経路
+                target_color = "\033[44m" # 経路は青とかにするべ
+
+            line2 += (f"{target_color} {RESET}" * horiz_repeat)
+        # 右側の東壁を追加
+        e_wall = maze.grid[y][maze.width-1]["E"]
+        line2 += (f"{wall_color if e_wall else BLACK} {RESET}" * horiz_repeat)
+        for _ in range(vert_repeat):
+            print(line2)
+
+        # 3段目：南側の壁（最後の行だけ）
+        if y == maze.height - 1:
+            line3 = ""
+            for x in range(maze.width):
+                s_wall = maze.grid[y][x]["S"]
+                color = wall_color if s_wall else BLACK
+                line3 += (f"{color}  {RESET}" * horiz_repeat)
+            # 南東の角
+            e_wall = maze.grid[y][maze.width-1]["E"]
+            line3 += (f"{wall_color if e_wall else BLACK} {RESET}" * horiz_repeat)
+            for _ in range(vert_repeat):
+                print(line3)
 
 
 def load_config(filename: str) -> dict:
@@ -68,29 +135,42 @@ def main():
     exit_pos = tuple(map(int, config["EXIT"].split(',')))
     
     # 3. 迷路の生成
-    maze = MazeGenerator(w, h, entry, exit_pos)
-    maze.generate(perfect=is_perfect)
+    try:
+        maze = MazeGenerator(w, h, entry, exit_pos)
+    except ValueError as e:
+        print(f"Error: {e}")
+        exit(1)
+
+    try:
+        maze.generate(perfect=is_perfect)
+    except FortyTwoRenderingError as e:
+        print(f"Error: {e}")
+        exit(1)
     
     # 最初に最短経路（座標リスト）を計算しておくべ
-    solution_path = maze.get_solution_coords() 
+    path_str, path_coords = maze.get_solution()
     
-    show_solution = False
-    wall_color = Fore.WHITE
+    show_solution = True
+    wall_color = "\033[47m"
 
     # --- 視覚的表現（Visual representation）のループ ---
     while True:
         os.system('cls' if os.name == 'nt' else 'clear')
         
         # 描画の呼び出し（pathを表示するかどうか選んで渡すべ）
-        current_path = solution_path if show_solution else []
-        draw_maze(maze, current_path, wall_color)
-
+        if show_solution == True:
+            # 「答えを見せる」設定がONなら
+            display_path = path_coords  # 用意してた「正解の座標リスト」を入れる
+        else:
+            # 「答えを見せる」設定がOFFなら
+            display_path = []   # 空っぽ（何もなし）を入れる
+        draw_real_maze(maze, display_path, show_solution, wall_color)
         print("\n[R]再生成 [S]経路切替 [C]色変更 [Q]保存して終了")
-        cmd = input("コマンドを入力してけれ: ").upper()
+        cmd = input("コマンドを入力してください: ").upper()
 
         if cmd == 'R':
             maze.generate(perfect=is_perfect)
-            solution_path = maze.get_solution_coords() 
+            path_str, path_coords = maze.get_solution() 
         elif cmd == 'S':
             show_solution = not show_solution
         elif cmd == 'C':
@@ -102,13 +182,13 @@ def main():
 
     # --- 4. 最終的なデータの取得と保存 ---
     # PDF要件にある「NSEW」形式の文字列としての解を取得
-    final_path_str = maze.get_solution() 
+    final_path_str, path_coords = maze.get_solution() 
     
     # 5. ファイル出力（OUTPUT_FILEに書き出すべ）
     output_filename = config["OUTPUT_FILE"]
-    maze.save_to_file(output_filename, final_path_str)
+    save_to_file(maze, output_filename, final_path_str)
     
-    print(f"\n迷路データを {output_filename} に保存したんし！")
+    print(f"\n迷路データを {output_filename} に保存しました！")
     print(f"最短経路（NSEW形式）: {final_path_str}")
 
 
