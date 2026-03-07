@@ -39,15 +39,17 @@ class MazeGenerator:
         """
         x, y = pos # 入口か出口の座標
 
-        # 1. 左端（西）が出口の場合
+        # 1. 上端（北）が入口/出口の場合
         if y == 0:
             self.grid[y][x]["N"] = False
-        elif y == self.height - 1:
+        # 2. 下端（南）が入口/出口の場合
+        if y == self.height - 1:
             self.grid[y][x]["S"] = False
-        # 上下に当てはまらねば、左右をチェックだべ
-        elif x == 0:
+        # 3. 左端（西）が入口/出口の場合
+        if x == 0:
             self.grid[y][x]["W"] = False
-        elif x == self.width - 1:
+        # 4. 右端（東）が入口/出口の場合
+        if x == self.width - 1:
             self.grid[y][x]["E"] = False
 
 
