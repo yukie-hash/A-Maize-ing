@@ -261,6 +261,8 @@ class MazeGenerator:
         # 入口（entry）からスタートして、掘り進める
         self._drill_maze(self.entry, perfect)
 
+        self._fill_remaining_cells()
+
         return success
 
     def get_solution(self):
