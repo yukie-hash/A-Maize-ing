@@ -1,5 +1,6 @@
 PYTHON	=	python3
 PIP		=	pip
+SRC		=	a_maze_ing.py config.txt
 
 .PHONY: install run debug clean lint lint-strict
 
@@ -7,7 +8,7 @@ install:
 		$(PIP) install -r requirements.txt
 
 run:
-		$(PYTHON) main.python3
+		$(PYTHON) $(SRC)
 
 debug:
 		$(PYTHON) -m pdb main.py
