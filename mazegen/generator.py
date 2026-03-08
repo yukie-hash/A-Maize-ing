@@ -159,7 +159,7 @@ class MazeGenerator:
                     stack.append((nx, ny))
                     found = True
                     break # 一歩進んだら、その場所からまた探し直すんし
-                elif not perfect:
+                if not perfect:
                     # 「聖域じゃねぇ」かつ「範囲内」なら、ごく稀に壁をぶち抜くべ
                     if not self._is_42_area(nx, ny) and \
                        (0 <= nx < self.width and 0 <= ny < self.height):
@@ -178,7 +178,7 @@ class MazeGenerator:
         迷路の真ん中に『42』の形の壁を配置し、壊されないようにマークする
         """
         #　整数除算をして中心の座標を割り出す
-        center_x, center_y = self.width // 2 - 3, self.height // 2 - 3
+        center_x, center_y = (self.width // 2) - 3, (self.height // 2) - 2
 
         #　'4'の形(相対座標)
         shape_4 = [
@@ -207,6 +207,35 @@ class MazeGenerator:
         
         self.forty_two_coords = tmp_coords
         return True
+
+    def _fill_remaining_cells(self) -> None:
+        """
+        DFS後に未掘のセルを見つけて、掘られたセルと繋ぐべ
+        """
+        for y in range(self.height):
+            for x in range(self.width):
+                # 1. セルが完全に壁で囲まれている（すべてTrue）かつ42エリアでない
+                if all(self.grid[y][x].values()) and not self._is_42_area(x, y):
+                    
+                    # 2. 上下左右の隣接セルをチェック
+                    directions = [
+                        (0, -1, "N", "S"),  # 北
+                        (0, 1, "S", "N"),   # 南
+                        (1, 0, "E", "W"),   # 東
+                        (-1, 0, "W", "E")   # 西
+                    ]
+                    random.shuffle(directions)
+                    
+                    for dx, dy, self_dir, neighbor_dir in directions:
+                        nx, ny = x + dx, y + dy
+                        
+                        # 3. 隣接セルが掘られているか確認
+                        if 0 <= nx < self.width and 0 <= ny < self.height:
+                            if not all(self.grid[ny][nx].values()):  # 掘られている
+                                # 4. 壁を壊して繋ぐべ！
+                                self.grid[y][x][self_dir] = False
+                                self.grid[ny][nx][neighbor_dir] = False
+                                break  # このセルは繋がったから終了
 
     def _reset_grid(self) -> None:
         """
@@ -273,7 +302,7 @@ class MazeGenerator:
                         queue.append((nx, ny))
         
         if not found:
-            return "" # ゴールが見つからねぇ時は空っぽを返すべ
+            return "", [] # ゴールが見つからねぇ時は空っぽを返すべ
 
         # 3. ゴールから「親」を辿って逆走するべ！
         path = []
