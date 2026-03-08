@@ -26,8 +26,8 @@ def save_to_file(maze, filename: str, path_str: str) -> None:
 
 def draw_real_maze(maze, path_coords, wall_color) -> None:
     """
-    通路のブロックそのものを経路の色に置き換えるだす。
-    道が繋がって見えるように、隣り合う経路との間も色を塗るべ！
+    壁と通路を全く同じ太さ（2文字分）で描画するだす。
+    1マスを「北西角・北壁」「西壁・中心」の2x2ブロックとして扱うべ。
     """
     RESET = "\033[0m"
     WALL = "\033[47m  "      # 壁（白）
@@ -35,45 +35,47 @@ def draw_real_maze(maze, path_coords, wall_color) -> None:
     ROUTE = "\033[44m  "     # 経路（青）
     ENTRY = "\033[45m  "     # 入口（紫）
     EXIT = "\033[41m  "      # 出口（赤）
-    PATTERN_42 = "\033[48;5;250m  " # 42（グレー）
+    PATTERN_42 = "\033[48;5;250m  " 
 
     path_set = set(path_coords) if path_coords else set()
-    forty_two_set = set(maze.forty_two_coords) if hasattr(maze, 'forty_two_coords') else set()
 
     for y in range(maze.height):
-        top, mid, bottom = "", "", ""
+        row_top, row_mid = "", ""
         for x in range(maze.width):
             cell = maze.grid[y][x]
             is_route = (x, y) in path_set and path_coords
 
-            # --- 1. 上段 (北側の接続) ---
-            # 自分が経路で、かつ北に壁がないなら、上の隙間も経路色にする
-            n_color = WALL if cell["N"] else (ROUTE if (is_route and (x, y-1) in path_set) else PATH)
-            top += WALL + n_color + WALL
+            # --- 1. 北西の角と北側の壁 ---
+            # 角は常に壁。その隣（北側）が壁かどうか
+            row_top += WALL 
+            row_top += WALL if cell["N"] else (ROUTE if (is_route and (x, y-1) in path_set) else PATH)
+
+            # --- 2. 西側の壁と中心 ---
+            # 西側が壁かどうか
+            row_mid += WALL if cell["W"] else (ROUTE if (is_route and (x-1, y) in path_set) else PATH)
             
-            # --- 2. 中段 (西側 + 中心 + 東側) ---
-            # 西側の接続
-            w_color = WALL if cell["W"] else (ROUTE if (is_route and (x-1, y) in path_set) else PATH)
-            
-            # 中心部分の判定
+            # 中心の決定
             if (x, y) == maze.entry: center = ENTRY
             elif (x, y) == maze.exit_pos: center = EXIT
-            elif (x, y) in forty_two_set: center = PATTERN_42
+            elif (x, y) in getattr(maze, 'forty_two_coords', []): center = PATTERN_42
             elif is_route: center = ROUTE
             else: center = PATH
-            
-            # 東側の接続
-            e_color = WALL if cell["E"] else (ROUTE if (is_route and (x+1, y) in path_set) else PATH)
-            
-            mid += w_color + center + e_color
+            row_mid += center
 
-            # --- 3. 下段 (南側の接続) ---
-            s_color = WALL if cell["S"] else (ROUTE if (is_route and (x, y+1) in path_set) else PATH)
-            bottom += WALL + s_color + WALL
+        # 右端の壁（東側の境界）を付け足す
+        last_cell = maze.grid[y][maze.width-1]
+        row_top += WALL # 右上の角
+        row_mid += WALL if last_cell["E"] else PATH
+        
+        print(f"{row_top}{RESET}")
+        print(f"{row_mid}{RESET}")
 
-        print(f"{top}{RESET}")
-        print(f"{mid}{RESET}")
-        print(f"{bottom}{RESET}")
+    # 一番下の南側の壁を一行まるごと付け足す
+    bottom_line = ""
+    for x in range(maze.width):
+        cell = maze.grid[maze.height-1][x]
+        bottom_line += WALL + (WALL if cell["S"] else PATH)
+    print(f"{bottom_line}{WALL}{RESET}") # 右下の角まで描いて終了
 
 
 def load_config(filename: str) -> dict:
