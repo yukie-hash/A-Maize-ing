@@ -24,13 +24,12 @@ def save_to_file(maze, filename: str, path_str: str) -> None:
         f.write(f"\n{path_str}\n")
 
 
-def draw_real_maze(maze, path_coords, wall_color) -> None:
+def draw_real_maze(maze, path_coords, WALL) -> None:
     """
     壁と通路を全く同じ太さ（2文字分）で描画するだす。
     1マスを「北西角・北壁」「西壁・中心」の2x2ブロックとして扱うべ。
     """
     RESET = "\033[0m"
-    WALL = "\033[47m  "      # 壁（白）
     PATH = "\033[40m  "      # 通常の通路（黒）
     ROUTE = "\033[44m  "     # 経路（青）
     ENTRY = "\033[45m  "     # 入口（紫）
@@ -136,7 +135,13 @@ def main():
     path_str, path_coords = maze.get_solution()
     
     show_solution = True
-    wall_color = "\033[47m"
+
+    WHITE  = "\033[47m  "
+    GREEN  = "\033[42m  "
+    YELLOW = "\033[43m  "
+    CYAN   = "\033[46m  "
+
+    wall_color = WHITE
 
     # --- 視覚的表現（Visual representation）のループ ---
     while True:
@@ -161,7 +166,7 @@ def main():
         elif cmd == 'S':
             show_solution = not show_solution
         elif cmd == 'C':
-            colors = [Fore.WHITE, Fore.RED, Fore.GREEN, Fore.CYAN, Fore.YELLOW]
+            colors = [WHITE, GREEN, YELLOW, CYAN]
             current_idx = colors.index(wall_color)
             wall_color = colors[(current_idx + 1) % len(colors)]
         elif cmd == 'Q':
