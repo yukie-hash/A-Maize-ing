@@ -31,7 +31,7 @@ class MazeGenerator:
         self.exit_pos = exit_pos
         random.seed(seed)
         self._reset_grid()
-
+        self.forty_two_coords = set()
 
     def _open_outer_wall(self, pos: Tuple[int, int]) -> None:
         """
@@ -173,7 +173,7 @@ class MazeGenerator:
                 # どこにも行けねぇ（行き止まり）なら、一歩戻る
                 stack.pop()
 
-    def _embed_42_pattern(self) -> None:
+    def _embed_42_pattern(self) -> bool:
         """
         迷路の真ん中に『42』の形の壁を配置し、壊されないようにマークする
         """
@@ -196,14 +196,17 @@ class MazeGenerator:
         ]
 
         # 実際に「ここが42の範囲」という集合（Set）に座標を入れる
-        self.forty_two_coords = set()
+        tmp_coords = set()
 
         for diff_x, diff_y in shape_4 + shape_2:
             nx_x, nx_y = center_x + diff_x, center_y + diff_y  # 絶対座標に変換
             # 迷路の範囲内であったら集合に加える
-            if not (0 <= nx_x < self.width and 0 <= nx_y < self.height):
-                raise FortyTwoRenderingError("Could not render '42'.")
-            self.forty_two_coords.add((nx_x, nx_y))
+            if not 0 <= nx_x < self.width and 0 <= nx_y < self.height:
+                return False
+            tmp_coords.add((nx_x, nx_y))
+        
+        self.forty_two_coords = tmp_coords
+        return True
 
     def _fill_remaining_cells(self) -> None:
         """
@@ -243,7 +246,7 @@ class MazeGenerator:
             for _ in range(self.height)
         ]
 
-    def generate(self, perfect: bool = True) -> None:
+    def generate(self, perfect: bool = True) -> bool:
         """
         迷路を生成する
         """
@@ -252,7 +255,7 @@ class MazeGenerator:
 
         # 2. 特殊要件：'42' の形に壁を「固定」する
         # この場所はドリルで掘っちゃダメな場所としてマークするべ
-        self._embed_42_pattern()
+        success = self._embed_42_pattern()
 
         # 3. メイン生成：穴掘り（ドリル）開始
         # 入口（entry）からスタートして、掘り進める
@@ -260,9 +263,7 @@ class MazeGenerator:
 
         self._fill_remaining_cells()
 
-        # 4. 仕上げ：入口出口への通路を確保
-        # self._open_outer_wall(self.entry)
-        # self._open_outer_wall(self.exit_pos)
+        return success
 
     def get_solution(self):
         """

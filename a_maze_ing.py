@@ -128,11 +128,9 @@ def main():
         print(f"Error: {e}")
         exit(1)
 
-    try:
-        maze.generate(perfect=is_perfect)
-    except FortyTwoRenderingError as e:
-        print(f"Error: {e}")
-        exit(1)
+    status_msg = ""
+    if not maze.generate(perfect=is_perfect):
+        status_msg = "Error: Could not render '42'."
     
     # 最初に最短経路（座標リスト）を計算しておくべ
     path_str, path_coords = maze.get_solution()
@@ -143,6 +141,8 @@ def main():
     # --- 視覚的表現（Visual representation）のループ ---
     while True:
         os.system('cls' if os.name == 'nt' else 'clear')
+        if status_msg:
+            print(f"{status_msg}")
         
         # 描画の呼び出し（pathを表示するかどうか選んで渡すべ）
         if show_solution == True:
