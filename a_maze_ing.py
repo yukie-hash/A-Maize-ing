@@ -24,71 +24,58 @@ def save_to_file(maze, filename: str, path_str: str) -> None:
         f.write(f"\n{path_str}\n")
 
 
-def draw_real_maze(maze, path_coords, show_solution: bool, wall_color) -> None:
-    # ANSIエスケープコード（標準機能だべ）
+def draw_real_maze(maze, path_coords, wall_color) -> None:
+    """
+    壁と通路を全く同じ太さ（2文字分）で描画するだす。
+    1マスを「北西角・北壁」「西壁・中心」の2x2ブロックとして扱うべ。
+    """
     RESET = "\033[0m"
-    BLACK = "\033[40m"    # 通路（黒）
-    ENTRY_CLR = "\033[45m" # 入口（紫）
-    EXIT_CLR = "\033[41m"  # 出口（赤）
-    PATTERN_42 = "\033[48;5;250m" # 「42」用のグレー
+    WALL = "\033[47m  "      # 壁（白）
+    PATH = "\033[40m  "      # 通常の通路（黒）
+    ROUTE = "\033[44m  "     # 経路（青）
+    ENTRY = "\033[45m  "     # 入口（紫）
+    EXIT = "\033[41m  "      # 出口（赤）
+    PATTERN_42 = "\033[48;5;250m  " 
 
-    # 横と縦それぞれ2回描くとセルが正方形に見える
-    horiz_repeat = 2
-    vert_repeat = 1
-    # 必要に応じて vert_repeat=1 で縦方向のみ1行にする
+    path_set = set(path_coords) if path_coords else set()
 
     for y in range(maze.height):
-        # --- 1段目：北側の壁を描く行 ---
-        line1 = ""
+        row_top, row_mid = "", ""
         for x in range(maze.width):
-            # 北(N)か西(W)に壁があれば壁色、なければ通路色
-            is_wall = maze.grid[y][x]["N"]
-            color = wall_color if is_wall else BLACK
-            # 各セルパーツを横方向に繰り返す
-            line1 += (f"{color}  {RESET}" * horiz_repeat)
-        # 右端に東側の壁を1つ追加
-        e_wall = maze.grid[y][maze.width-1]["E"]
-        line1 += (f"{wall_color if e_wall else BLACK} {RESET}" * horiz_repeat)
-        for _ in range(vert_repeat):
-            print(line1)
+            cell = maze.grid[y][x]
+            is_route = (x, y) in path_set and path_coords
 
-        # --- 2段目：西側の壁と通路（中心）を描く行 ---
-        line2 = ""
-        for x in range(maze.width):
-            # 1. 西側の壁
-            w_color = wall_color if maze.grid[y][x]["W"] else BLACK
-            line2 += (f"{w_color} {RESET}" * horiz_repeat) 
+            # --- 1. 北西の角と北側の壁 ---
+            # 角は常に壁。その隣（北側）が壁かどうか
+            row_top += WALL 
+            row_top += WALL if cell["N"] else (ROUTE if (is_route and (x, y-1) in path_set) else PATH)
 
-            # 2. セルの中心（通路 / 入口 / 出口 / 42 / 経路）
-            target_color = BLACK
-            if (x, y) == maze.entry:
-                target_color = ENTRY_CLR
-            elif (x, y) == maze.exit_pos:
-                target_color = EXIT_CLR
-            elif (x, y) in maze.forty_two_coords: # 42パターンの座標
-                target_color = PATTERN_42
-            elif (x, y) in path_coords: # 最短経路
-                target_color = "\033[44m" # 経路は青とかにするべ
+            # --- 2. 西側の壁と中心 ---
+            # 西側が壁かどうか
+            row_mid += WALL if cell["W"] else (ROUTE if (is_route and (x-1, y) in path_set) else PATH)
+            
+            # 中心の決定
+            if (x, y) == maze.entry: center = ENTRY
+            elif (x, y) == maze.exit_pos: center = EXIT
+            elif (x, y) in getattr(maze, 'forty_two_coords', []): center = PATTERN_42
+            elif is_route: center = ROUTE
+            else: center = PATH
+            row_mid += center
 
-            line2 += (f"{target_color} {RESET}" * horiz_repeat)
-        # 右側の東壁を追加
-        e_wall = maze.grid[y][maze.width-1]["E"]
-        line2 += (f"{wall_color if e_wall else BLACK} {RESET}" * horiz_repeat)
-        for _ in range(vert_repeat):
-            print(line2)
+        # 右端の壁（東側の境界）を付け足す
+        last_cell = maze.grid[y][maze.width-1]
+        row_top += WALL # 右上の角
+        row_mid += WALL if last_cell["E"] else PATH
+        
+        print(f"{row_top}{RESET}")
+        print(f"{row_mid}{RESET}")
 
-        # 3段目：南側の壁（最後の行だけ）
-        if y == maze.height - 1:
-            line3 = ""
-            for x in range(maze.width):
-                s_wall = maze.grid[y][x]["S"]
-                color = wall_color if s_wall else BLACK
-                line3 += (f"{color}  {RESET}" * horiz_repeat)
-            # 南東の角
-            e_wall = maze.grid[y][maze.width-1]["E"]
-            line3 += (f"{wall_color if e_wall else BLACK} {RESET}" * horiz_repeat)
-            for _ in range(vert_repeat):
-                print(line3)
+    # 一番下の南側の壁を一行まるごと付け足す
+    bottom_line = ""
+    for x in range(maze.width):
+        cell = maze.grid[maze.height-1][x]
+        bottom_line += WALL + (WALL if cell["S"] else PATH)
+    print(f"{bottom_line}{WALL}{RESET}") # 右下の角まで描いて終了
 
 
 def load_config(filename: str) -> dict:
@@ -164,7 +151,7 @@ def main():
         else:
             # 「答えを見せる」設定がOFFなら
             display_path = []   # 空っぽ（何もなし）を入れる
-        draw_real_maze(maze, display_path, show_solution, wall_color)
+        draw_real_maze(maze, display_path, wall_color)
         print("\n[R]再生成 [S]経路切替 [C]色変更 [Q]保存して終了")
         cmd = input("コマンドを入力してください: ").upper()
 
