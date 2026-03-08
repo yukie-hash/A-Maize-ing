@@ -8,4 +8,4 @@ EXIT=19, 19
 
 # その他の設定
 OUTPUT_FILE=maze_result.txt
-PERFECT=True
+PERFECT=False
