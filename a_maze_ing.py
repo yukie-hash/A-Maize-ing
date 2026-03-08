@@ -47,13 +47,13 @@ def draw_real_maze(maze, path_coords, wall_color) -> None:
 
             # --- 1. 北西の角と北側の壁 ---
             # 角は常に壁。その隣（北側）が壁かどうか
-            row_top += WALL 
-            row_top += WALL if cell["N"] else (ROUTE if (is_route and (x, y-1) in path_set) else PATH)
+            row_top += WALL
+            row_top += (WALL if cell["N"] else (ROUTE if (is_route and (x, y-1) in path_set) else PATH))
 
             # --- 2. 西側の壁と中心 ---
             # 西側が壁かどうか
-            row_mid += WALL if cell["W"] else (ROUTE if (is_route and (x-1, y) in path_set) else PATH)
-            
+            row_mid += (WALL if cell["W"] else (ROUTE if (is_route and (x-1, y) in path_set) else PATH))
+
             # 中心の決定
             if (x, y) == maze.entry: center = ENTRY
             elif (x, y) == maze.exit_pos: center = EXIT
@@ -65,7 +65,7 @@ def draw_real_maze(maze, path_coords, wall_color) -> None:
         # 右端の壁（東側の境界）を付け足す
         last_cell = maze.grid[y][maze.width-1]
         row_top += WALL # 右上の角
-        row_mid += WALL if last_cell["E"] else PATH
+        row_mid += (WALL if last_cell["E"] else PATH)
         
         print(f"{row_top}{RESET}")
         print(f"{row_mid}{RESET}")
@@ -74,7 +74,7 @@ def draw_real_maze(maze, path_coords, wall_color) -> None:
     bottom_line = ""
     for x in range(maze.width):
         cell = maze.grid[maze.height-1][x]
-        bottom_line += WALL + (WALL if cell["S"] else PATH)
+        bottom_line += (WALL + (WALL if cell["S"] else PATH)) 
     print(f"{bottom_line}{WALL}{RESET}") # 右下の角まで描いて終了
 
 
