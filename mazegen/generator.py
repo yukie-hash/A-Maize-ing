@@ -159,7 +159,7 @@ class MazeGenerator:
                     stack.append((nx, ny))
                     found = True
                     break # 一歩進んだら、その場所からまた探し直すんし
-                elif not perfect:
+                if not perfect:
                     # 「聖域じゃねぇ」かつ「範囲内」なら、ごく稀に壁をぶち抜くべ
                     if not self._is_42_area(nx, ny) and \
                        (0 <= nx < self.width and 0 <= ny < self.height):
@@ -178,21 +178,21 @@ class MazeGenerator:
         迷路の真ん中に『42』の形の壁を配置し、壊されないようにマークする
         """
         #　整数除算をして中心の座標を割り出す
-        center_x, center_y = self.width // 2, self.height // 2
+        center_x, center_y = (self.width // 2) - 3, (self.height // 2) - 2
 
         #　'4'の形(相対座標)
         shape_4 = [
-            (0, 0), (0, 1), (0, 2),  # 縦棒
-            (-1, 1), (-2, 1),        # 横棒
-            (-2, 0)                  # 左の角
+            (0, 0), (0, 1), (0, 2), # 縦棒
+            (1, 2), (2, 2),         # 横棒
+            (2, 3), (2, 4)          # 左の角
         ]
 
         # '2' の形（相対座標）
         shape_2 = [
-            (2, 0), (3, 0), (4, 0),  # 上
-            (4, 1), (3, 1), (2, 1),  # 中
-            (2, 2), (3, 2), (4, 2),  # 下
-            (4, 1), (2, 2)           # つなぎ（微調整してけれ！）
+            (4, 0), (5, 0), (6, 0),  # 上
+            (4, 2), (5, 2), (6, 2),  # 中
+            (4, 4), (5, 4), (6, 4),  # 下
+            (4, 3), (6, 1)           # つなぎ（微調整してけれ！）
         ]
 
         # 実際に「ここが42の範囲」という集合（Set）に座標を入れる
@@ -201,9 +201,38 @@ class MazeGenerator:
         for diff_x, diff_y in shape_4 + shape_2:
             nx_x, nx_y = center_x + diff_x, center_y + diff_y  # 絶対座標に変換
             # 迷路の範囲内であったら集合に加える
-            if not 0 <= nx_x < self.width and 0 <= nx_y < self.height:
+            if not (0 <= nx_x < self.width and 0 <= nx_y < self.height):
                 raise FortyTwoRenderingError("Could not render '42'.")
             self.forty_two_coords.add((nx_x, nx_y))
+
+    def _fill_remaining_cells(self) -> None:
+        """
+        DFS後に未掘のセルを見つけて、掘られたセルと繋ぐべ
+        """
+        for y in range(self.height):
+            for x in range(self.width):
+                # 1. セルが完全に壁で囲まれている（すべてTrue）かつ42エリアでない
+                if all(self.grid[y][x].values()) and not self._is_42_area(x, y):
+                    
+                    # 2. 上下左右の隣接セルをチェック
+                    directions = [
+                        (0, -1, "N", "S"),  # 北
+                        (0, 1, "S", "N"),   # 南
+                        (1, 0, "E", "W"),   # 東
+                        (-1, 0, "W", "E")   # 西
+                    ]
+                    random.shuffle(directions)
+                    
+                    for dx, dy, self_dir, neighbor_dir in directions:
+                        nx, ny = x + dx, y + dy
+                        
+                        # 3. 隣接セルが掘られているか確認
+                        if 0 <= nx < self.width and 0 <= ny < self.height:
+                            if not all(self.grid[ny][nx].values()):  # 掘られている
+                                # 4. 壁を壊して繋ぐべ！
+                                self.grid[y][x][self_dir] = False
+                                self.grid[ny][nx][neighbor_dir] = False
+                                break  # このセルは繋がったから終了
 
     def _reset_grid(self) -> None:
         """
@@ -229,9 +258,11 @@ class MazeGenerator:
         # 入口（entry）からスタートして、掘り進める
         self._drill_maze(self.entry, perfect)
 
+        self._fill_remaining_cells()
+
         # 4. 仕上げ：入口出口への通路を確保
-        self._open_outer_wall(self.entry)
-        self._open_outer_wall(self.exit_pos)
+        # self._open_outer_wall(self.entry)
+        # self._open_outer_wall(self.exit_pos)
 
     def get_solution(self):
         """
@@ -272,7 +303,7 @@ class MazeGenerator:
                         queue.append((nx, ny))
         
         if not found:
-            return "" # ゴールが見つからねぇ時は空っぽを返すべ
+            return "", [] # ゴールが見つからねぇ時は空っぽを返すべ
 
         # 3. ゴールから「親」を辿って逆走するべ！
         path = []
