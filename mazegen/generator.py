@@ -246,6 +246,36 @@ class MazeGenerator:
             for _ in range(self.height)
         ]
 
+    def _break_wall_further(self):
+        """
+        さらに壁を壊す
+        """
+        for y in range(self.height):
+            for x in range(self.width):
+                # 1. セルが完全に壁で囲まれている（すべてTrue）かつ42エリアでない
+                wall_count = sum(self.grid[y][x].values())
+                if wall_count == 3 and not self._is_42_area(x, y):
+                    
+                    # 2. 上下左右の隣接セルをチェック
+                    directions = [
+                        (0, -1, "N", "S"),  # 北
+                        (0, 1, "S", "N"),   # 南
+                        (1, 0, "E", "W"),   # 東
+                        (-1, 0, "W", "E")   # 西
+                    ]
+                    random.shuffle(directions)
+                    
+                    for dx, dy, self_dir, neighbor_dir in directions:
+                        nx, ny = x + dx, y + dy
+                        
+                        # 3. 隣接セルが掘られているか確認
+                        if 0 <= nx < self.width and 0 <= ny < self.height:
+                            if not all(self.grid[ny][nx].values()):  # 掘られている
+                                # 4. 壁を壊して繋ぐべ！
+                                self.grid[y][x][self_dir] = False
+                                self.grid[ny][nx][neighbor_dir] = False
+                                break  # このセルは繋がったから終了
+
     def generate(self, perfect: bool = True) -> bool:
         """
         迷路を生成する
@@ -261,7 +291,12 @@ class MazeGenerator:
         # 入口（entry）からスタートして、掘り進める
         self._drill_maze(self.entry, perfect)
 
+        # 4. 入口から出口の経路ではなかったセルの壁を壊す
         self._fill_remaining_cells()
+
+        # 5. perfect == Falseならさらに壁を壊す
+        if perfect == False:
+            self._break_wall_further()
 
         return success
 
