@@ -1,7 +1,6 @@
 import random
 import collections
 from typing import List, Tuple, Optional
-from .exceptions import FortyTwoRenderingError
 
 
 class MazeGenerator:
@@ -25,13 +24,13 @@ class MazeGenerator:
         self.exit_pos = exit_pos
         random.seed(seed)
         self._reset_grid()
-        self.forty_two_coords = set()
+        self.forty_two_coords: set[tuple[int, int]] = set()
 
     def _open_outer_wall(self, pos: Tuple[int, int]) -> None:
         """
         入口もしくは出口の壁を開ける
         """
-        x, y = pos # 入口か出口の座標
+        x, y = pos  # 入口か出口の座標
 
         # 1. 上端（北）が入口/出口の場合
         if y == 0:
@@ -45,7 +44,6 @@ class MazeGenerator:
         # 4. 右端（東）が入口/出口の場合
         if x == self.width - 1:
             self.grid[y][x]["E"] = False
-
 
     def _break_wall(self, x1: int, y1: int, x2: int, y2: int):
         """
@@ -65,7 +63,6 @@ class MazeGenerator:
             else:        # 左（西）へ ★ここを追加だべ！
                 self.grid[y1][x1]["W"] = False
                 self.grid[y2][x2]["E"] = False
-
 
     def _creates_square(self, x: int, y: int) -> bool:
         """
@@ -89,12 +86,11 @@ class MazeGenerator:
                    all(self.grid[ny][nx].values()):
                     is_square = False
                     break
-            
-            if is_square: # 3つの隣人が全部通路だったら、自分が加わると2x2完成...ダメだべ！
-                return True
-                
-        return False
 
+            if is_square:  # 3つの隣人が全部通路だったら、自分が加わると2x2完成...ダメだべ！
+                return True
+
+        return False
 
     def _is_42_area(self, x: int, y: int) -> bool:
         """
@@ -102,8 +98,7 @@ class MazeGenerator:
         """
         return (x, y) in self.forty_two_coords
 
-
-    def _can_dig(self, nx, ny):
+    def _can_dig(self, nx: int, ny: int) -> bool:
         """
         壊してもいい壁かどうかを確認する
         """
@@ -127,42 +122,40 @@ class MazeGenerator:
 
         return True
 
-
     def _drill_maze(self, start_pos: Tuple[int, int], perfect: bool):
         """
         どこをいつどちら向きに壁を掘ればいいかを決める関数
         """
         stack = [start_pos]
-        
         while stack:
-            cx, cy = stack[-1] # 今いる場所
-            #print(f"DEBUG: Now at {cx, cy}, stack size: {len(stack)}")            
-            
+            cx, cy = stack[-1]  # 今いる場所
+            # print(f"DEBUG: Now at {cx, cy}, stack size: {len(stack)}")            
+
             # 1. 周囲（上下左右）の座標をリストにする
             directions = [(0, -1), (1, 0), (0, 1), (-1, 0)] # 北、東、南、西
-            random.shuffle(directions) # ランダムに掘るために混ぜるべ！
-            
+            random.shuffle(directions)  # ランダムに掘るために混ぜるべ！
+
             found = False
             for dx, dy in directions:
                 nx, ny = cx + dx, cy + dy
-                
+
                 # 2. ★ここで「次の目的地(nx, ny)」が掘れるか門番に聞く！★
                 if self._can_dig(nx, ny):
                     # 3. 門番がOK出したら、壁を壊して進むべ！
                     self._break_wall(cx, cy, nx, ny)
                     stack.append((nx, ny))
                     found = True
-                    break # 一歩進んだら、その場所からまた探し直すんし
+                    break  # 一歩進んだら、その場所からまた探し直すんし
                 if not perfect:
                     # 「聖域じゃねぇ」かつ「範囲内」なら、ごく稀に壁をぶち抜くべ
                     if not self._is_42_area(nx, ny) and \
                        (0 <= nx < self.width and 0 <= ny < self.height):
-                        
+
                         # 例えば「10回に1回」くらい、すでに通路になってる場所とも繋いじまう！
-                        if random.random() < 0.1: # 10%の確率
+                        if random.random() < 0.1:  # 10%の確率
                             self._break_wall(cx, cy, nx, ny)
                             # ここでは stack.append はしねぇ。壁を壊すだけだべ。
-            
+
             if not found:
                 # どこにも行けねぇ（行き止まり）なら、一歩戻る
                 stack.pop()
@@ -176,7 +169,7 @@ class MazeGenerator:
 
         #　'4'の形(相対座標)
         shape_4 = [
-            (0, 0), (0, 1), (0, 2), # 縦棒
+            (0, 0), (0, 1), (0, 2),  # 縦棒
             (1, 2), (2, 2),         # 横棒
             (2, 3), (2, 4)          # 左の角
         ]
@@ -198,7 +191,7 @@ class MazeGenerator:
             if not 0 <= nx_x < self.width and 0 <= nx_y < self.height:
                 return False
             tmp_coords.add((nx_x, nx_y))
-        
+
         self.forty_two_coords = tmp_coords
         return True
 
@@ -210,7 +203,7 @@ class MazeGenerator:
             for x in range(self.width):
                 # 1. セルが完全に壁で囲まれている（すべてTrue）かつ42エリアでない
                 if all(self.grid[y][x].values()) and not self._is_42_area(x, y):
-                    
+
                     # 2. 上下左右の隣接セルをチェック
                     directions = [
                         (0, -1, "N", "S"),  # 北
@@ -219,10 +212,10 @@ class MazeGenerator:
                         (-1, 0, "W", "E")   # 西
                     ]
                     random.shuffle(directions)
-                    
+
                     for dx, dy, self_dir, neighbor_dir in directions:
                         nx, ny = x + dx, y + dy
-                        
+
                         # 3. 隣接セルが掘られているか確認
                         if 0 <= nx < self.width and 0 <= ny < self.height:
                             if not all(self.grid[ny][nx].values()):  # 掘られている
@@ -240,7 +233,7 @@ class MazeGenerator:
             for _ in range(self.height)
         ]
 
-    def _break_wall_further(self):
+    def _break_wall_further(self) -> None:
         """
         さらに壁を壊す
         """
@@ -249,7 +242,7 @@ class MazeGenerator:
                 # 1. セルが完全に壁で囲まれている（すべてTrue）かつ42エリアでない
                 wall_count = sum(self.grid[y][x].values())
                 if wall_count == 3 and not self._is_42_area(x, y):
-                    
+
                     # 2. 上下左右の隣接セルをチェック
                     directions = [
                         (0, -1, "N", "S"),  # 北
@@ -258,10 +251,10 @@ class MazeGenerator:
                         (-1, 0, "W", "E")   # 西
                     ]
                     random.shuffle(directions)
-                    
+
                     for dx, dy, self_dir, neighbor_dir in directions:
                         nx, ny = x + dx, y + dy
-                        
+
                         # 3. 隣接セルが掘られているか確認
                         if 0 <= nx < self.width and 0 <= ny < self.height:
                             if not all(self.grid[ny][nx].values()):  # 掘られている
@@ -289,62 +282,65 @@ class MazeGenerator:
         self._fill_remaining_cells()
 
         # 5. perfect == Falseならさらに壁を壊す
-        if perfect == False:
+        if not perfect:
             self._break_wall_further()
 
         return success
 
-    def get_solution(self):
+    def get_solution(self) -> Tuple[str, List[Tuple[int, int]]]:
         """
         幅優先探索（BFS）を使って最短経路を見つけ、座標とNSEWの文字列で返す
         """
         start = self.entry
         goal = self.exit_pos
-        
+
         # 1. 探索用の準備
         # queue: 次に調べる場所を入れるもの
         # parent: 「(今の座標): (一つ前の座標, 進んできた方向)」を記録するもの
         queue = collections.deque([start])
-        parent = {start: (None, None)} 
-        
+        # 「座標かNone」と「文字列かNone」のペアが入る辞書だべ
+        parent: dict[tuple[int, int], tuple[Optional[tuple[int, int]], Optional[str]]] = {start: (None, None)}
+
         found = False
         while queue:
             cx, cy = queue.popleft()
-            
+
             if (cx, cy) == goal:
                 found = True
                 break
-                
+
             # 2. 今の場所から「壁がねぇ方向」を探す
             # 北(N), 南(S), 東(E), 西(W) の順にチェック
             directions = {
-                "N": (0, -1), "S": (0, 1), 
+                "N": (0, -1), "S": (0, 1),
                 "E": (1, 0), "W": (-1, 0)
             }
-            
+
             for d_name, (dx, dy) in directions.items():
                 nx, ny = cx + dx, cy + dy
-                
+
                 # 範囲内か？ 
                 if 0 <= nx < self.width and 0 <= ny < self.height:
                     # ★ここが大事！ 壁が壊れてる（False）かつ、まだ行ってねぇ場所か？
                     if not self.grid[cy][cx][d_name] and (nx, ny) not in parent:
                         parent[(nx, ny)] = ((cx, cy), d_name)
                         queue.append((nx, ny))
-        
+
         if not found:
-            return "", [] # ゴールが見つからねぇ時は空っぽを返すべ
+            return "", []  # ゴールが見つからねぇ時は空っぽを返すべ
 
         # 3. ゴールから「親」を辿って逆走するべ！
-        path = []
+        path: list[str] = []  # NSEWの文字を入れるリストだべ
         path_coords = [goal]
         curr = goal
         while curr != start:
-            prev_pos, direction = parent[curr] # 座標を記録するリスト
+            prev_pos, direction = parent[curr]  # 座標を記録するリスト
+            if prev_pos is None or direction is None:
+                break
             path.append(direction)
-            path_coords.append(prev_pos) # 座標もどんどん追加するべ
+            path_coords.append(prev_pos)  # 座標もどんどん追加するべ
             curr = prev_pos
-            
+
         # 逆順になってるから、ひっくり返して一本の文字列にするべ
         return "".join(reversed(path)), path_coords[::-1]
 
@@ -353,22 +349,26 @@ class MazeGenerator:
         各セルの壁情報を 0-F の16進数に変換してリストで返す
         """
         hex_grid = []
-        
+
         for y in range(self.height):
             row = []
             for x in range(self.width):
                 # 1. そのマスの壁情報をチェックして、合計値を計算するべ
                 val = 0
-                if self.grid[y][x]["N"]: val += 1
-                if self.grid[y][x]["E"]: val += 2
-                if self.grid[y][x]["S"]: val += 4
-                if self.grid[y][x]["W"]: val += 8
-                
+                if self.grid[y][x]["N"]:
+                    val += 1
+                if self.grid[y][x]["E"]:
+                    val += 2
+                if self.grid[y][x]["S"]:
+                    val += 4
+                if self.grid[y][x]["W"]:
+                    val += 8
+
                 # 2. 合計値を16進数（1文字）に変換して、大文字にするべ
                 # hex(15) は '0xf' になるから、最後の1文字だけ取って大文字にすんだ
                 hex_char = hex(val)[2:].upper()
                 row.append(hex_char)
-                
+
             hex_grid.append(row)
-            
+
         return hex_grid
