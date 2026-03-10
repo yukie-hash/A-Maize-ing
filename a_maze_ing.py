@@ -113,19 +113,27 @@ def main():
     config = load_config("config.txt")
     
     # 2. 値の変換
-    w = int(config["WIDTH"])
-    h = int(config["HEIGHT"])
-    is_perfect = config["PERFECT"].lower() == "true"
-    # 入口と出口も設定から持ってくるべ
-    entry = tuple(map(int, config["ENTRY"].split(',')))
-    exit_pos = tuple(map(int, config["EXIT"].split(',')))
+    try:
+        w = int(config["WIDTH"])
+        h = int(config["HEIGHT"])
+        if not (0 < w < 500 and 0 < h < 500):
+            raise ValueError ("WIDTH/HEIGHT must be between 1 and 499")
+
+        is_perfect = config["PERFECT"].lower() == "true"
+        if config["PERFECT"].lower() not in ["true", "false"]:
+            raise ValueError ("PERFECT must be 'true' or 'false'")
+
+        entry = tuple(map(int, config["ENTRY"].split(',')))
+        exit_pos = tuple(map(int, config["EXIT"].split(',')))
+        if not (0 <= entry[0] < w and 0 <= entry[1] < h) or \
+           not (0 <= exit_pos[0] < w and 0 <= exit_pos[1] < h):
+           raise ValueError(f"Invalid entry {entry} or exit {exit_pos} for grid size {w}x{h}")
+    except ValueError as e:
+        print(f"Error in config.txt: {e}")
+        exit(1)
     
     # 3. 迷路の生成
-    try:
-        maze = MazeGenerator(w, h, entry, exit_pos)
-    except ValueError as e:
-        print(f"Error: {e}")
-        exit(1)
+    maze = MazeGenerator(w, h, entry, exit_pos)
 
     status_msg = ""
     if not maze.generate(perfect=is_perfect):

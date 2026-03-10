@@ -18,13 +18,7 @@ class MazeGenerator:
             entry (Tuple[int, int]): 入口の座標
             exit_pos (Tuple[int, int]): 出口の座標
             seed (Optional[int], optional): シード値 Defaults to None.
-
-        Raises:
-            ValueError: 入口もしくは出口が迷路の範囲外にあるときのエラー
         """
-        if not (0 <= entry[0] < width and 0 <= entry[1] < height) or \
-           not (0 <= exit_pos[0] < width and 0 <= exit_pos[1] < height):
-           raise ValueError(f"Invalid entry {entry} or exit {exit_pos} for grid size {width}x{height}")
         self.width = width
         self.height = height
         self.entry = entry
