@@ -24,7 +24,7 @@ def save_to_file(maze, filename: str, path_str: str) -> None:
         f.write(f"\n{path_str}\n")
 
 
-def draw_real_maze(maze, path_coords, WALL) -> None:
+def draw_real_maze(maze, path_coords, WALL, NUM) -> None:
     """
     壁と通路を全く同じ太さ（2文字分）で描画するだす。
     1マスを「北西角・北壁」「西壁・中心」の2x2ブロックとして扱うべ。
@@ -33,8 +33,8 @@ def draw_real_maze(maze, path_coords, WALL) -> None:
     PATH = "\033[40m  "      # 通常の通路（黒）
     ROUTE = "\033[44m  "     # 経路（青）
     ENTRY = "\033[45m  "     # 入口（紫）
-    EXIT = "\033[41m  "      # 出口（赤）
-    PATTERN_42 = "\033[48;5;250m  " 
+    EXIT = "\033[41m  "      # 出口（赤）    
+    PATTERN_42 = "\033[48;5;250m  "
 
     path_set = set(path_coords) if path_coords else set()
 
@@ -56,7 +56,7 @@ def draw_real_maze(maze, path_coords, WALL) -> None:
             # 中心の決定
             if (x, y) == maze.entry: center = ENTRY
             elif (x, y) == maze.exit_pos: center = EXIT
-            elif (x, y) in getattr(maze, 'forty_two_coords', []): center = PATTERN_42
+            elif (x, y) in getattr(maze, 'forty_two_coords', []): center = NUM
             elif is_route: center = ROUTE
             else: center = PATH
             row_mid += center
@@ -140,8 +140,13 @@ def main():
     GREEN  = "\033[42m  "
     YELLOW = "\033[43m  "
     CYAN   = "\033[46m  "
+    GRAY = "\033[48;5;250m  "
+    RED    = "\033[41m  "
+    PERPLE = "\033[45m  "
 
     wall_color = WHITE
+    num_color = GRAY
+    count = 0
 
     # --- 視覚的表現（Visual representation）のループ ---
     while True:
@@ -156,8 +161,9 @@ def main():
         else:
             # 「答えを見せる」設定がOFFなら
             display_path = []   # 空っぽ（何もなし）を入れる
-        draw_real_maze(maze, display_path, wall_color)
-        print("\n[R]再生成 [S]経路切替 [C]色変更 [Q]保存して終了")
+        draw_real_maze(maze, display_path, wall_color, num_color)
+
+        print("\n[R]再生成 [S]経路切替 [C]色変更 [N]42・色変更 [Q]保存して終了")
         cmd = input("コマンドを入力してください: ").upper()
 
         if cmd == 'R':
@@ -169,6 +175,10 @@ def main():
             colors = [WHITE, GREEN, YELLOW, CYAN]
             current_idx = colors.index(wall_color)
             wall_color = colors[(current_idx + 1) % len(colors)]
+        elif cmd == 'N':
+            num_colors = [GRAY, RED, PERPLE]
+            num_idx = num_colors.index(num_color)
+            num_color = num_colors[(num_idx + 1) % len(num_colors)]
         elif cmd == 'Q':
             break # ループを抜けて、ファイル出力へ進むべ！
 
