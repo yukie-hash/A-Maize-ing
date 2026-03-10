@@ -4,18 +4,17 @@ from typing import List, Tuple, Optional
 
 
 class MazeGenerator:
-    """
-    迷路生成クラス
+    """迷路を生成する.
     """
 
-    def __init__(self, width: int, height: int, entry: Tuple[int, int], exit_pos: Tuple[int, int], seed: Optional[int] = None):
-        """迷路の情報を初期化する
+    def __init__(self, width: int, height: int, entry: Tuple[int, int], exit_pos: Tuple[int, int], seed: Optional[int] = None) -> None:
+        """迷路の情報を初期化する.
 
         Args:
-            width (int): 迷路の幅
-            height (int): 迷路の高さ
-            entry (Tuple[int, int]): 入口の座標
-            exit_pos (Tuple[int, int]): 出口の座標
+            width (int): 迷路の幅.
+            height (int): 迷路の高さ.
+            entry (Tuple[int, int]): 入口の座標.
+            exit_pos (Tuple[int, int]): 出口の座標.
             seed (Optional[int], optional): シード値 Defaults to None.
         """
         self.width = width
@@ -27,8 +26,10 @@ class MazeGenerator:
         self.forty_two_coords: set[tuple[int, int]] = set()
 
     def _open_outer_wall(self, pos: Tuple[int, int]) -> None:
-        """
-        入口もしくは出口の壁を開ける
+        """入口もしくは出口の壁を開ける.
+
+        Args:
+            pos (Tuple[int, int]): 入口もしくは出口の座標.
         """
         x, y = pos  # 入口か出口の座標
 
@@ -45,9 +46,11 @@ class MazeGenerator:
         if x == self.width - 1:
             self.grid[y][x]["E"] = False
 
-    def _break_wall(self, x1: int, y1: int, x2: int, y2: int):
-        """
-        壁を壊すメゾット
+    def _break_wall(self, x1: int, y1: int, x2: int, y2: int)
+        """壁を壊す.
+
+        Args:
+            x1 (int): 
         """
         if x1 == x2:  # 縦に並んでいる場合
             if y1 < y2:  # 下（南）へ
@@ -66,7 +69,7 @@ class MazeGenerator:
 
     def _creates_square(self, x: int, y: int) -> bool:
         """
-        (x, y) を通路にすると、どこかに2x2の空白ができてしまはないかをチェックする
+        (x, y) を通路にすると、どこかに2x2の空白ができてしまわないかをチェックする
         """
         # チェックする4つの「2x2エリア」のオフセット
         # 左上方向、右上方向、左下方向、右下方向
@@ -288,8 +291,10 @@ class MazeGenerator:
         return success
 
     def get_solution(self) -> Tuple[str, List[Tuple[int, int]]]:
-        """
-        幅優先探索（BFS）を使って最短経路を見つけ、座標とNSEWの文字列で返す
+        """幅優先探索（BFS）を使って最短経路を見つけ、座標とNSEWの文字列で返す.
+
+        Returns:
+            Tuple[str, List[Tuple[int, int]]]: _description_
         """
         start = self.entry
         goal = self.exit_pos
@@ -345,8 +350,7 @@ class MazeGenerator:
         return "".join(reversed(path)), path_coords[::-1]
 
     def get_hex_representation(self) -> List[List[str]]:
-        """
-        各セルの壁情報を 0-F の16進数に変換してリストで返す
+        """各セルの壁情報を 0-F の16進数に変換してリストで返す.
         """
         hex_grid = []
 
