@@ -105,7 +105,7 @@ class MazeGenerator:
                     is_square = False
                     break
 
-            if is_square:  # 3つの隣人が全部通路だったら、自分が加わると2x2完成...ダメだべ！
+            if is_square:  # 3つの隣人が全部通路だったら、自分が加わると2x2完成...ダメ！
                 return True
 
         return False
@@ -155,8 +155,13 @@ class MazeGenerator:
 
         return True
 
-    def _drill_maze(self, start_pos: Tuple[int, int], perfect: bool):
-        """どこをいつどちら向きに壁を掘ればいいかを決める."""
+    def _drill_maze(self, start_pos: Tuple[int, int], perfect: bool) -> None:
+        """どこをいつどちら向きに壁を掘ればいいかを決める.
+
+        Args:
+            start_pos (Tuple[int, int]): 入口の座標.
+            perfect (bool): 完璧な迷路を生成するか否かの指示.
+        """
         stack = [start_pos]
         while stack:
             cx, cy = stack[-1]  # 今いる場所
