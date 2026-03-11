@@ -149,14 +149,16 @@ class MazeGenerator:
             return False
 
         # 4. 【最重要】3x3（または2x2）の空白ができねぇか？
-        # 自分の周囲をチェックして、隣り合う4マスが全部「通路」にならないか確認するべ
+        # 自分の周囲をチェックして、隣り合う4マスが全部「通路」にならないか確認する
         if self._creates_square(nx, ny):
             return False
 
         return True
 
     def _drill_maze(self, start_pos: Tuple[int, int], perfect: bool) -> None:
-        """どこをいつどちら向きに壁を掘ればいいかを決める.
+        """穴掘り法を用いて通路を掘っていく.
+
+        スタックに現在地を保存しながら
 
         Args:
             start_pos (Tuple[int, int]): 入口の座標.
@@ -164,7 +166,7 @@ class MazeGenerator:
         """
         stack = [start_pos]
         while stack:
-            cx, cy = stack[-1]  # 今いる場所
+            cx, cy = stack[-1]  # 今いる場所　一番最後に追加された要素
             # print(f"DEBUG: Now at {cx, cy}, stack size: {len(stack)}")
 
             # 1. 周囲（上下左右）の座標をリストにする
