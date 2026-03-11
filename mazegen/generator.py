@@ -1,11 +1,11 @@
+"""迷路を生成し、最短経路を探索する."""
 import random
 import collections
 from typing import List, Tuple, Optional
 
 
 class MazeGenerator:
-    """迷路を生成する.
-    """
+    """迷路を生成し、最短経路を探索する."""
 
     def __init__(self, width: int, height: int, entry: Tuple[int, int],
                  exit_pos: Tuple[int, int],
@@ -49,10 +49,16 @@ class MazeGenerator:
             self.grid[y][x]["E"] = False
 
     def _break_wall(self, x1: int, y1: int, x2: int, y2: int):
-        """壁を壊す.
+        """指定された2つのセル間の壁を取り除く.
 
         Args:
-            x1 (int):
+            x1 (int): 現在のセルのX座標.
+            y1 (int): 現在のセルのY座標.
+            x2 (int): 隣接するセルのX座標.
+            y2 (int): 隣接するセルのY座標.
+
+        Returns:
+            None: 戻り値はない。
         """
         if x1 == x2:  # 縦に並んでいる場合
             if y1 < y2:  # 下（南）へ
@@ -65,13 +71,20 @@ class MazeGenerator:
             if x1 < x2:  # 右（東）へ
                 self.grid[y1][x1]["E"] = False
                 self.grid[y2][x2]["W"] = False
-            else:        # 左（西）へ ★ここを追加だべ！
+            else:        # 左（西）へ
                 self.grid[y1][x1]["W"] = False
                 self.grid[y2][x2]["E"] = False
 
     def _creates_square(self, x: int, y: int) -> bool:
-        """
-        (x, y) を通路にすると、どこかに2x2の空白ができてしまわないかをチェックする
+        """(x, y) を通路にすると、どこかに3✕3の空白ができてしまわないかをチェックする.
+
+        Args:
+            x (int): 現在のセルのX座標.
+            y (int): 現在のセルのY座標.
+
+        Returns:
+            True (bool): 通路にすると3✕3の空白ができてしまう
+            False (bool): 3✕3の通路にならない、つまり穴を掘っていいセルである
         """
         # チェックする4つの「2x2エリア」のオフセット
         # 左上方向、右上方向、左下方向、右下方向
@@ -99,13 +112,28 @@ class MazeGenerator:
 
     def _is_42_area(self, x: int, y: int) -> bool:
         """
-        指定された座標 (x, y) が『42』の形を構成する範囲かどうかを判定する
+        指定された座標 (x, y) が『42』の形を構成する範囲かどうかを判定する.
+
+        Args:
+            x (int): 指定されたX座標.
+            y (int): 指定されたY座標.
+
+        Returns:
+            True (bool): 42の範囲である.
+            False (bool): 42の範囲でない.
         """
         return (x, y) in self.forty_two_coords
 
     def _can_dig(self, nx: int, ny: int) -> bool:
-        """
-        壊してもいい壁かどうかを確認する
+        """指定したセルが壊してもいい壁かどうかを確認する.
+
+        Args:
+            nx (int): 指定されたX座標.
+            ny (int): 指定されたY座標.
+
+        Returns:
+            True (bool): 壊して良い壁である.
+            False (bool): 壊せない壁である.
         """
         # 1. そもそも迷路の範囲内だが？
         if not (0 <= nx < self.width and 0 <= ny < self.height):
@@ -128,9 +156,7 @@ class MazeGenerator:
         return True
 
     def _drill_maze(self, start_pos: Tuple[int, int], perfect: bool):
-        """
-        どこをいつどちら向きに壁を掘ればいいかを決める関数
-        """
+        """どこをいつどちら向きに壁を掘ればいいかを決める."""
         stack = [start_pos]
         while stack:
             cx, cy = stack[-1]  # 今いる場所
@@ -166,8 +192,10 @@ class MazeGenerator:
                 stack.pop()
 
     def _embed_42_pattern(self) -> bool:
-        """
-        迷路の真ん中に『42』の形の壁を配置し、壊されないようにマークする
+        """迷路の真ん中に『42』の形の壁を配置し、壊されないようにマークする.
+
+        Returns:
+            bool: 42を描けたらTrue、迷路の範囲が小さすぎて描けなかったらFalseを返す.
         """
         center_x, center_y = (self.width // 2) - 3, (self.height // 2) - 2
 
@@ -198,8 +226,9 @@ class MazeGenerator:
         return True
 
     def _fill_remaining_cells(self) -> None:
-        """
-        DFS後に未掘のセルを見つけて、掘られたセルと繋ぐ
+        """孤立したセルをなくす.
+
+        四方が壁に囲まれたセルをみつけ、壁に穴を開ける.
         """
         for y in range(self.height):
             for x in range(self.width):
@@ -228,9 +257,7 @@ class MazeGenerator:
                                 break  # このセルは繋がったから終了
 
     def _reset_grid(self) -> None:
-        """
-        内部データ：各セルを「北・東・南・西に壁がある」辞書で埋める
-        """
+        """各セルを「北・東・南・西に壁がある」辞書で埋める."""
         self.grid = [
             [{"N": True, "E": True, "S": True, "W": True}
                 for _ in range(self.width)]
@@ -238,9 +265,7 @@ class MazeGenerator:
         ]
 
     def _break_wall_further(self) -> None:
-        """
-        さらに壁を壊す
-        """
+        """完璧な迷路生成後に、3方向の壁が立っている行き止まりのセルを見つけ穴を開けることで、完璧でない迷路を作る."""
         for y in range(self.height):
             for x in range(self.width):
                 # 1. セルが完全に壁で囲まれている（すべてTrue）かつ42エリアでない
@@ -268,14 +293,20 @@ class MazeGenerator:
                                 break  # このセルは繋がったから終了
 
     def generate(self, perfect: bool = True) -> bool:
-        """
-        迷路を生成する
+        """迷路を生成する.
+
+        Args:
+            perect (bool): 完璧な迷路を生成するか否か.デフォルトではTrue.
+
+        Returns:
+            success (bool): 42の配置に成功した場合Trueを返す.
+                            配置できなかった場合Falseを返す.
         """
         # 1. 準備：グリッドを「全部壁」でリセット
         self._reset_grid()
 
         # 2. 特殊要件：'42' の形に壁を「固定」する
-        # この場所はドリルで掘っちゃダメな場所としてマークするべ
+        # この場所はドリルで掘っちゃダメな場所としてマークする
         success = self._embed_42_pattern()
 
         # 3. メイン生成：穴掘り（ドリル）開始
@@ -295,7 +326,7 @@ class MazeGenerator:
         """幅優先探索（BFS）を使って最短経路を見つけ、座標とNSEWの文字列で返す.
 
         Returns:
-            Tuple[str, List[Tuple[int, int]]]: _description_
+            Tuple[str, List[Tuple[int, int]]]: 最短経路の座標とNSEWの文字列.
         """
         start = self.entry
         goal = self.exit_pos
@@ -355,6 +386,12 @@ class MazeGenerator:
 
     def get_hex_representation(self) -> List[List[str]]:
         """各セルの壁情報を 0-F の16進数に変換してリストで返す.
+
+        各セルの上の壁が立っていたら1、右の壁が立っていたら2、下なら4、左なら8として、
+        その合計値でどの壁が立っているかを表す.
+
+            Returns:
+                hex_grid (List[List[str]]) : 各セルのどの壁が立っているかを16進数で表したもの.
         """
         hex_grid = []
 

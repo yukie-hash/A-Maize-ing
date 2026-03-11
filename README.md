@@ -48,7 +48,7 @@ maze.generate()
 
 ## チームとプロジェクト管理について  
 #### 役割分担  
-・yhamada - MazeGeneratorの作成  
+・yhamada - MazeGeneratorの作成、main関数の設計、エラーハンドリング    
 ・twatanuki - Makefileの作成、ターミナル表示機能の作成  
 
 #### 当初の予定とどう変更していったか
