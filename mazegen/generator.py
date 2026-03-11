@@ -204,7 +204,8 @@ class MazeGenerator:
         for y in range(self.height):
             for x in range(self.width):
                 # 1. セルが完全に壁で囲まれている（すべてTrue）かつ42エリアでない
-                if all(self.grid[y][x].values()) and not self._is_42_area(x, y):
+                if all(self.grid[y][x].values()) \
+                        and not self._is_42_area(x, y):
 
                     # 2. 上下左右の隣接セルをチェック
                     directions = [
@@ -231,7 +232,8 @@ class MazeGenerator:
         内部データ：各セルを「北・東・南・西に壁がある」辞書で埋める
         """
         self.grid = [
-            [{"N": True, "E": True, "S": True, "W": True} for _ in range(self.width)]
+            [{"N": True, "E": True, "S": True, "W": True}
+                for _ in range(self.width)]
             for _ in range(self.height)
         ]
 
@@ -303,7 +305,9 @@ class MazeGenerator:
         # parent: 「(今の座標): (一つ前の座標, 進んできた方向)」を記録するもの
         queue = collections.deque([start])
         # 「座標かNone」と「文字列かNone」のペアが入る辞書だべ
-        parent: dict[tuple[int, int], tuple[Optional[tuple[int, int]], Optional[str]]] = {start: (None, None)}
+        parent: dict[tuple[int, int],
+                     tuple[Optional[tuple[int, int]],
+                           Optional[str]]] = {start: (None, None)}
 
         found = False
         while queue:
@@ -326,7 +330,8 @@ class MazeGenerator:
                 # 範囲内か？
                 if 0 <= nx < self.width and 0 <= ny < self.height:
                     # ★ここが大事！ 壁が壊れてる（False）かつ、まだ行ってねぇ場所か？
-                    if not self.grid[cy][cx][d_name] and (nx, ny) not in parent:
+                    if not self.grid[cy][cx][d_name] \
+                            and (nx, ny) not in parent:
                         parent[(nx, ny)] = ((cx, cy), d_name)
                         queue.append((nx, ny))
 

@@ -42,11 +42,22 @@ def draw_real_maze(maze: MazeGenerator, path_coords, WALL, NUM) -> None:
             # --- 1. 北西の角と北側の壁 ---
             # 角は常に壁。その隣（北側）が壁かどうか
             row_top += WALL
-            row_top += (WALL if cell["N"] else (ROUTE if (is_route and (x, y-1) in path_set) else PATH))
+            if cell["N"]:
+                row_top += WALL
+            else:
+                if is_route and (x, y-1) in path_set:
+                    row_top += ROUTE
+                else:
+                    row_top += PATH
 
             # --- 2. 西側の壁と中心 ---
             # 西側が壁かどうか
-            row_mid += (WALL if cell["W"] else (ROUTE if (is_route and (x-1, y) in path_set) else PATH))
+            if cell["W"]:
+                row_mid += WALL
+            elif is_route and (x-1, y) in path_set:
+                row_mid += ROUTE
+            else:
+                row_mid += PATH
 
             # 中心の決定
             if (x, y) == maze.entry:
@@ -99,7 +110,9 @@ def load_config(filename: str) -> dict:
         exit(1)
 
     # 必須キー（WIDTH, HEIGHTなど）が含まれているか確認する [cite: 121, 122]
-    required_keys = ["WIDTH", "HEIGHT", "ENTRY", "EXIT", "OUTPUT_FILE", "PERFECT"]
+    required_keys = [
+        "WIDTH", "HEIGHT", "ENTRY", "EXIT", "OUTPUT_FILE", "PERFECT"
+        ]
     for r_key in required_keys:
         if r_key not in config:
             print(f"Error: Missing mandatory key '{r_key}'")
