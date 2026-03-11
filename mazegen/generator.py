@@ -7,7 +7,9 @@ class MazeGenerator:
     """迷路を生成する.
     """
 
-    def __init__(self, width: int, height: int, entry: Tuple[int, int], exit_pos: Tuple[int, int], seed: Optional[int] = None) -> None:
+    def __init__(self, width: int, height: int, entry: Tuple[int, int],
+                 exit_pos: Tuple[int, int],
+                 seed: Optional[int] = None) -> None:
         """迷路の情報を初期化する.
 
         Args:
@@ -46,11 +48,11 @@ class MazeGenerator:
         if x == self.width - 1:
             self.grid[y][x]["E"] = False
 
-    def _break_wall(self, x1: int, y1: int, x2: int, y2: int)
+    def _break_wall(self, x1: int, y1: int, x2: int, y2: int):
         """壁を壊す.
 
         Args:
-            x1 (int): 
+            x1 (int):
         """
         if x1 == x2:  # 縦に並んでいる場合
             if y1 < y2:  # 下（南）へ
@@ -74,7 +76,7 @@ class MazeGenerator:
         # チェックする4つの「2x2エリア」のオフセット
         # 左上方向、右上方向、左下方向、右下方向
         check_offsets = [
-            [(-1, -1), (-1, 0), (0, -1)], # 自分の左上
+            [(-1, -1), (-1, 0), (0, -1)],  # 自分の左上
             [(1, -1), (1, 0), (0, -1)],  # 自分の右上
             [(-1, 1), (-1, 0), (0, 1)],   # 自分の左下
             [(1, 1), (1, 0), (0, 1)]      # 自分の右下
@@ -132,10 +134,10 @@ class MazeGenerator:
         stack = [start_pos]
         while stack:
             cx, cy = stack[-1]  # 今いる場所
-            # print(f"DEBUG: Now at {cx, cy}, stack size: {len(stack)}")            
+            # print(f"DEBUG: Now at {cx, cy}, stack size: {len(stack)}")
 
             # 1. 周囲（上下左右）の座標をリストにする
-            directions = [(0, -1), (1, 0), (0, 1), (-1, 0)] # 北、東、南、西
+            directions = [(0, -1), (1, 0), (0, 1), (-1, 0)]  # 北、東、南、西
             random.shuffle(directions)  # ランダムに掘るために混ぜるべ！
 
             found = False
@@ -167,22 +169,19 @@ class MazeGenerator:
         """
         迷路の真ん中に『42』の形の壁を配置し、壊されないようにマークする
         """
-        #　整数除算をして中心の座標を割り出す
         center_x, center_y = (self.width // 2) - 3, (self.height // 2) - 2
 
-        #　'4'の形(相対座標)
         shape_4 = [
             (0, 0), (0, 1), (0, 2),  # 縦棒
             (1, 2), (2, 2),         # 横棒
             (2, 3), (2, 4)          # 左の角
         ]
 
-        # '2' の形（相対座標）
         shape_2 = [
-            (4, 0), (5, 0), (6, 0),  # 上
-            (4, 2), (5, 2), (6, 2),  # 中
-            (4, 4), (5, 4), (6, 4),  # 下
-            (4, 3), (6, 1)           # つなぎ（微調整してけれ！）
+            (4, 0), (5, 0), (6, 0),
+            (4, 2), (5, 2), (6, 2),
+            (4, 4), (5, 4), (6, 4),
+            (4, 3), (6, 1)
         ]
 
         # 実際に「ここが42の範囲」という集合（Set）に座標を入れる
@@ -200,7 +199,7 @@ class MazeGenerator:
 
     def _fill_remaining_cells(self) -> None:
         """
-        DFS後に未掘のセルを見つけて、掘られたセルと繋ぐべ
+        DFS後に未掘のセルを見つけて、掘られたセルと繋ぐ
         """
         for y in range(self.height):
             for x in range(self.width):
@@ -324,7 +323,7 @@ class MazeGenerator:
             for d_name, (dx, dy) in directions.items():
                 nx, ny = cx + dx, cy + dy
 
-                # 範囲内か？ 
+                # 範囲内か？
                 if 0 <= nx < self.width and 0 <= ny < self.height:
                     # ★ここが大事！ 壁が壊れてる（False）かつ、まだ行ってねぇ場所か？
                     if not self.grid[cy][cx][d_name] and (nx, ny) not in parent:

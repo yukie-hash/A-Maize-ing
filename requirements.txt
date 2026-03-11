@@ -1,0 +1,5 @@
+typing
+mazegen
+mypy
+pydocstyle
+flake8

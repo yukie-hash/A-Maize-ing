@@ -30,7 +30,7 @@ def draw_real_maze(maze: MazeGenerator, path_coords, WALL, NUM) -> None:
     PATH = "\033[40m  "      # 通常の通路（黒）
     ROUTE = "\033[44m  "     # 経路（青）
     ENTRY = "\033[45m  "     # 入口（紫）
-    EXIT = "\033[41m  "      # 出口（赤)   
+    EXIT = "\033[41m  "      # 出口（赤)
     path_set = set(path_coords) if path_coords else set()
 
     for y in range(maze.height):
@@ -53,7 +53,8 @@ def draw_real_maze(maze: MazeGenerator, path_coords, WALL, NUM) -> None:
                 center = ENTRY
             elif (x, y) == maze.exit_pos:
                 center = EXIT
-            elif (x, y) in getattr(maze, 'forty_two_coords', []): center = NUM
+            elif (x, y) in getattr(maze, 'forty_two_coords', []):
+                center = NUM
             elif is_route:
                 center = ROUTE
             else:
@@ -72,7 +73,7 @@ def draw_real_maze(maze: MazeGenerator, path_coords, WALL, NUM) -> None:
     bottom_line = ""
     for x in range(maze.width):
         cell = maze.grid[maze.height-1][x]
-        bottom_line += (WALL + (WALL if cell["S"] else PATH)) 
+        bottom_line += (WALL + (WALL if cell["S"] else PATH))
     print(f"{bottom_line}{WALL}{RESET}")    # 右下の角まで描いて終了
 
 
@@ -93,7 +94,7 @@ def load_config(filename: str) -> dict:
                     config[key.strip()] = value.strip()
 
     except FileNotFoundError:
-        # ファイルがない場合はクラッシュさせず、エラーを表示して終了する 
+        # ファイルがない場合はクラッシュさせず、エラーを表示して終了する
         print(f"Error: {filename} not found.")
         exit(1)
 
@@ -134,7 +135,8 @@ def main() -> None:
 
         if not (0 <= entry[0] < w and 0 <= entry[1] < h) or \
            not (0 <= exit_pos[0] < w and 0 <= exit_pos[1] < h):
-            raise ValueError(f"Invalid entry {entry} or exit {exit_pos} for grid size {w}x{h}")
+            raise ValueError(f"Invalid entry {entry} or exit"
+                             f" {exit_pos} for grid size {w}x{h}")
     except ValueError as e:
         print(f"Error in config.txt: {e}")
         exit(1)
@@ -167,7 +169,7 @@ def main() -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
         if status_msg:
             print(f"{status_msg}")
- 
+
         # 描画の呼び出し（pathを表示するかどうか選んで渡すべ）
         if show_solution is True:
             # 「答えを見せる」設定がONなら
@@ -182,7 +184,7 @@ def main() -> None:
 
         if cmd == 'R':
             maze.generate(perfect=is_perfect)
-            path_str, path_coords = maze.get_solution() 
+            path_str, path_coords = maze.get_solution()
         elif cmd == 'S':
             show_solution = not show_solution
         elif cmd == 'C':
@@ -198,8 +200,7 @@ def main() -> None:
 
     # --- 4. 最終的なデータの取得と保存 ---
     # PDF要件にある「NSEW」形式の文字列としての解を取得
-    final_path_str, path_coords = maze.get_solution() 
-
+    final_path_str, path_coords = maze.get_solution()
     # 5. ファイル出力（OUTPUT_FILEに書き出すべ）
     output_filename = config["OUTPUT_FILE"]
     save_to_file(maze, output_filename, final_path_str)
