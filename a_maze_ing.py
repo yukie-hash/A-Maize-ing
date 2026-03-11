@@ -1,10 +1,15 @@
+"""configファイルの数値をもとにMazeGeneratorを実行しターミナルに表示した後、実行結果をファイルに出力する."""
 from mazegen.generator import MazeGenerator
 import os
 
 
 def save_to_file(maze: MazeGenerator, filename: str, path_str: str) -> None:
-    """
-    16進数の迷路データと最短経路をテキストファイルに保存する
+    """16進数の迷路データと最短経路をテキストファイルに保存する.
+
+    Args:
+        maze (MazeGenerator): 生成した迷路の実体.
+        filename (str): 結果を出力するファイル.
+        path_str (str): 最短経路.
     """
     # 1. 16進数のリストを取得する
     hex_data = maze.get_hex_representation()
@@ -21,10 +26,18 @@ def save_to_file(maze: MazeGenerator, filename: str, path_str: str) -> None:
         f.write(f"\n{path_str}\n")
 
 
-def draw_real_maze(maze: MazeGenerator, path_coords, WALL, NUM) -> None:
-    """
-    壁と通路を全く同じ太さ（2文字分）で描画するだす。
-    1マスを「北西角・北壁」「西壁・中心」の2x2ブロックとして扱うべ。
+def draw_real_maze(maze: MazeGenerator, path_coords: list[tuple[int, int]],
+                   WALL: str, NUM: str) -> None:
+    """迷路をターミナルに表示する.
+
+    壁と通路を全く同じ太さ（2文字分）で描画する.
+    1マスを「北西角・北壁」「西壁・中心」の2x2ブロックとして扱う.
+
+    Args:
+        maze (MazeGenerator) : 生成した迷路の実体.
+        path_coords (tuple[int, int]) : 最短経路を座標で表したもの.
+        WALL: (str) : 壁の表示色.
+        NUM: (str) : 42の表示色.
     """
     RESET = "\033[0m"
     PATH = "\033[40m  "      # 通常の通路（黒）
@@ -89,6 +102,14 @@ def draw_real_maze(maze: MazeGenerator, path_coords, WALL, NUM) -> None:
 
 
 def load_config(filename: str) -> dict:
+    """configファイルを開き、中身を保存する.
+
+    Args:
+        filename (str): configファイル.
+
+    Returns:
+        dict: configファイルから読み取った情報.
+    """
     config = {}
     try:
         # コンテキストマネージャ（with）を使って安全にファイルを開く [cite: 75]
@@ -122,6 +143,15 @@ def load_config(filename: str) -> dict:
 
 
 def main() -> None:
+    """迷路生成に必要な情報を変数に保存する.MazeGeneratorを実行する.ターミナルに描画する.実行結果をresultファイルに出力する.
+
+    Raises:
+        ValueError: 迷路の幅、高さ設定が無効範囲である場合.
+        ValueError: perfectの値がtrue/false以外である場合.
+        ValueError: entryの座標の値が2以外である場合.
+        ValueError: exitの座標の値が2以外である場合.
+        ValueError: entry,exitの座標が迷路の範囲外に有る場合.
+    """
     # 1. 設定の読み込み
     config = load_config("config.txt")
 
