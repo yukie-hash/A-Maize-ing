@@ -11,7 +11,7 @@ run:
 		$(PYTHON) $(SRC)
 
 debug:
-		$(PYTHON) -m pdb main.py
+		$(PYTHON) -m pdb $(SRC)
 
 clean:
 		rm -rf __pycache__
@@ -21,7 +21,7 @@ clean:
 
 lint:
 		flake8 .
-		mypy . --warn-return-any --waran-unsigned ignorees --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+		mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
 lint-strict:
 		flake8 .
