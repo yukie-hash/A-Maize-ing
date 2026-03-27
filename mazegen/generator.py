@@ -27,23 +27,6 @@ class MazeGenerator:
         self._reset_grid()
         self.forty_two_coords: set[tuple[int, int]] = set()
 
-    def _open_outer_wall(self, pos: Tuple[int, int]) -> None:
-        """入口もしくは出口の壁を開ける.
-
-        Args:
-            pos (Tuple[int, int]): 入口もしくは出口の座標.
-        """
-        x, y = pos
-
-        if y == 0:
-            self.grid[y][x]["N"] = False
-        if y == self.height - 1:
-            self.grid[y][x]["S"] = False
-        if x == 0:
-            self.grid[y][x]["W"] = False
-        if x == self.width - 1:
-            self.grid[y][x]["E"] = False
-
     def _break_wall(self, x1: int, y1: int, x2: int, y2: int) -> None:
         """指定された2つのセル間の壁を取り除く.
 
