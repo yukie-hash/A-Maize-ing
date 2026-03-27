@@ -44,7 +44,7 @@ class MazeGenerator:
         if x == self.width - 1:
             self.grid[y][x]["E"] = False
 
-    def _break_wall(self, x1: int, y1: int, x2: int, y2: int):
+    def _break_wall(self, x1: int, y1: int, x2: int, y2: int) -> None:
         """指定された2つのセル間の壁を取り除く.
 
         Args:

@@ -90,7 +90,7 @@ def draw_real_maze(maze: MazeGenerator, path_coords: list[tuple[int, int]],
     print(f"{bottom_line}{WALL}{RESET}")
 
 
-def load_config(filename: str) -> dict:
+def load_config(filename: str) -> dict[str, str]:
     """configファイルを開き、中身を保存する.
 
     Args:
