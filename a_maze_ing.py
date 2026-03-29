@@ -198,7 +198,7 @@ def main() -> None:
             display_path = []
         draw_real_maze(maze, display_path, wall_color, num_color)
 
-        print("\n[R]再生成 [S]経路切替 [C]色変更 [N]42・色変更 [Q]保存して終了")
+        print("\n[R]再生成 [S]経路表示 [C]色変更 [N]42・色変更 [Q]保存して終了")
         cmd = input("コマンドを入力してください: ").upper()
 
         if cmd == 'R':

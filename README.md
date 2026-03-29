@@ -10,6 +10,11 @@
 2. 実行する：　`make run`
     
 ## リソース 
+#### 外部参照資料：  
+・穴掘り法を使って迷路を作ろう / Qiita     
+　https://qiita.com/naru_1017/items/e4d017433372a313aeb3  
+・幅優先探索を用いて迷路の最短手数を求めてみる / Qiita  
+　https://qiita.com/valusun/items/46bce86ef090e5649c60  
 #### AIの使用状況：   
 ・ この課題で学ぶ概念の理解効率化  
 ・ subjectの翻訳、要約、解説  
