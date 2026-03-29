@@ -216,6 +216,8 @@ def main() -> None:
             num_color = num_colors[(num_idx + 1) % len(num_colors)]
         elif cmd == 'Q':
             break
+        else:
+            print("無効なコマンドです。もう一度入力してください。")
 
     final_path_str, path_coords = maze.get_solution()
     output_filename = config["OUTPUT_FILE"]
