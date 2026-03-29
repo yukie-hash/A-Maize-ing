@@ -3,6 +3,7 @@ from mazegen.generator import MazeGenerator
 import os
 import sys
 
+
 def save_to_file(maze: MazeGenerator, filename: str, path_str: str) -> None:
     """16進数の迷路データと最短経路をテキストファイルに保存する.
 
@@ -126,7 +127,7 @@ def load_config(filename: str) -> dict[str, str]:
     for r_key in required_keys:
         if r_key not in config:
             print(f"Error: Missing mandatory key '{r_key}'")
-            sys.sys.exit(1)
+            sys.exit(1)
 
     return config
 
