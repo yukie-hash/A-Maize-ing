@@ -1,7 +1,7 @@
 """configファイルの数値をもとにMazeGeneratorを実行しターミナルに表示した後、実行結果をファイルに出力する."""
 from mazegen.generator import MazeGenerator
 import os
-
+import sys
 
 def save_to_file(maze: MazeGenerator, filename: str, path_str: str) -> None:
     """16進数の迷路データと最短経路をテキストファイルに保存する.
@@ -106,14 +106,16 @@ def load_config(filename: str) -> dict[str, str]:
                 line = line.strip()
                 if not line or line.startswith('#'):
                     continue
-
-                if '=' in line:
+                elif '=' in line:
                     key, value = line.split('=', 1)
                     config[key.strip()] = value.strip()
+                else:
+                    print(f"config.txtの行 '{line}' は無効な形式です。")
+                    sys.exit(1)
 
     except FileNotFoundError:
         print(f"Error: {filename} not found.")
-        exit(1)
+        sys.exit(1)
 
     required_keys = [
         "WIDTH", "HEIGHT", "ENTRY", "EXIT", "OUTPUT_FILE", "PERFECT"
@@ -121,7 +123,7 @@ def load_config(filename: str) -> dict[str, str]:
     for r_key in required_keys:
         if r_key not in config:
             print(f"Error: Missing mandatory key '{r_key}'")
-            exit(1)
+            sys.sys.exit(1)
 
     return config
 
@@ -164,7 +166,7 @@ def main() -> None:
                              f" {exit_pos} for grid size {w}x{h}")
     except ValueError as e:
         print(f"Error in config.txt: {e}")
-        exit(1)
+        sys.exit(1)
 
     maze = MazeGenerator(w, h, entry, exit_pos)
 
@@ -210,7 +212,7 @@ def main() -> None:
             break
         except KeyboardInterrupt:
             print("\n\nプログラムが中断されました。")
-            exit(1)
+            sys.exit(1)
 
         if cmd == 'R':
             maze.generate(is_perfect)
