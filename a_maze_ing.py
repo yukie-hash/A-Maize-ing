@@ -203,7 +203,14 @@ def main() -> None:
             print(f"{noncd_msg}")
             noncd_msg = ""
         print("\n[R]再生成 [S]経路表示 [C]色変更 [N]42・色変更 [Q]保存して終了")
-        cmd = input("コマンドを入力してください: ").upper()
+        try:
+            cmd = input("コマンドを入力してください: ").upper()
+        except EOFError:
+            print("\n\nEOFを検知しました。入力を終了します。")
+            break
+        except KeyboardInterrupt:
+            print("\n\nプログラムが中断されました。")
+            exit(1)
 
         if cmd == 'R':
             maze.generate(is_perfect)
