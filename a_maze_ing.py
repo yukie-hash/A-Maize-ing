@@ -187,10 +187,14 @@ def main() -> None:
     wall_color = WHITE
     num_color = GRAY
 
+    noncd_msg = ""
     while True:
         os.system('cls' if os.name == 'nt' else 'clear')
         if status_msg:
             print(f"{status_msg}")
+        if noncd_msg:
+            print(f"{noncd_msg}")
+            noncd_msg = ""
 
         if show_solution is True:
             display_path = path_coords
@@ -217,7 +221,7 @@ def main() -> None:
         elif cmd == 'Q':
             break
         else:
-            print("無効なコマンドです。もう一度入力してください。")
+            noncd_msg = "無効なコマンドです。もう一度入力してください。"
 
     final_path_str, path_coords = maze.get_solution()
     output_filename = config["OUTPUT_FILE"]
