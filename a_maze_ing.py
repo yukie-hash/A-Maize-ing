@@ -192,9 +192,6 @@ def main() -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
         if status_msg:
             print(f"{status_msg}")
-        if noncd_msg:
-            print(f"{noncd_msg}")
-            noncd_msg = ""
 
         if show_solution is True:
             display_path = path_coords
@@ -202,6 +199,9 @@ def main() -> None:
             display_path = []
         draw_real_maze(maze, display_path, wall_color, num_color)
 
+        if noncd_msg:
+            print(f"{noncd_msg}")
+            noncd_msg = ""
         print("\n[R]再生成 [S]経路表示 [C]色変更 [N]42・色変更 [Q]保存して終了")
         cmd = input("コマンドを入力してください: ").upper()
 
