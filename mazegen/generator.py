@@ -9,7 +9,7 @@ class MazeGenerator:
 
     def __init__(self, width: int, height: int, entry: Tuple[int, int],
                  exit_pos: Tuple[int, int],
-                 seed: Optional[int] = None) -> None:
+                 seeds: Optional[int] = None) -> None:
         """迷路の情報を初期化する.
 
         Args:
@@ -23,7 +23,8 @@ class MazeGenerator:
         self.height = height
         self.entry = entry
         self.exit_pos = exit_pos
-        random.seed(seed)
+        self.seeds = seeds
+        random.seed(self.seeds)
         self._reset_grid()
         self.forty_two_coords: set[tuple[int, int]] = set()
 
@@ -138,7 +139,6 @@ class MazeGenerator:
         while stack:
             cx, cy = stack[-1]
             # print(f"DEBUG: Now at {cx, cy}, stack size: {len(stack)}")
-
             directions = [(0, -1), (1, 0), (0, 1), (-1, 0)]
             random.shuffle(directions)
 
@@ -177,9 +177,10 @@ class MazeGenerator:
 
         shape_2 = [
             (4, 0), (5, 0), (6, 0),
+            (6, 1),
             (4, 2), (5, 2), (6, 2),
-            (4, 4), (5, 4), (6, 4),
-            (4, 3), (6, 1)
+            (4, 3),
+            (4, 4), (5, 4), (6, 4)
         ]
 
         tmp_coords = set()
@@ -192,6 +193,38 @@ class MazeGenerator:
 
         self.forty_two_coords = tmp_coords
         return True
+
+    def _fix_42_isolation(self) -> None:
+        """
+        「42」パターンの周辺で孤立したセルを解消する.
+        """
+        for coord in self.forty_two_coords:
+            x, y = coord
+            neighbors = [
+                (x-1, y-1), (x, y-1), (x+1, y-1),
+                (x-1, y),             (x+1, y),
+                (x-1, y+1), (x, y+1), (x+1, y+1)
+            ]
+            for nx, ny in neighbors:
+                if (0 <= nx < self.width and 0 <= ny < self.height and
+                        not self._is_42_area(nx, ny)):
+                    if all(self.grid[ny][nx].values()):
+                        directions = [
+                            (0, -1, "N", "S"),
+                            (0, 1, "S", "N"),
+                            (1, 0, "E", "W"),
+                            (-1, 0, "W", "E")
+                        ]
+                        for dx, dy, self_dir, neighbor_dir in directions:
+                            nnx, nny = nx + dx, ny + dy
+                            if (nnx, nny) == (x, y):
+                                continue
+                            if (0 <= nnx < self.width and
+                                    0 <= nny < self.height):
+                                if not all(self.grid[nny][nnx].values()):
+                                    self.grid[ny][nx][self_dir] = False
+                                    self.grid[nny][nnx][neighbor_dir] = False
+                                    break
 
     def _fill_remaining_cells(self) -> None:
         """孤立したセルをなくす.
@@ -262,6 +295,8 @@ class MazeGenerator:
             success (bool): 42の配置に成功した場合Trueを返す.
                             配置できなかった場合Falseを返す.
         """
+        random.seed(self.seeds)
+
         self._reset_grid()
 
         success = self._embed_42_pattern()
@@ -269,6 +304,8 @@ class MazeGenerator:
         self._drill_maze(self.entry, perfect)
 
         self._fill_remaining_cells()
+
+        self._fix_42_isolation()
 
         if not perfect:
             self._break_wall_further()

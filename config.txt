@@ -2,7 +2,7 @@ WIDTH=20
 HEIGHT=20
 
 ENTRY=0,0
-EXIT=19, 19
+EXIT=16, 16
 
 OUTPUT_FILE=maze_result.txt
-PERFECT=False
+PERFECT=true
