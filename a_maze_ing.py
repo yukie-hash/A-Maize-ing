@@ -187,10 +187,14 @@ def main() -> None:
     wall_color = WHITE
     num_color = GRAY
 
+    noncd_msg = ""
     while True:
         os.system('cls' if os.name == 'nt' else 'clear')
         if status_msg:
             print(f"{status_msg}")
+        if noncd_msg:
+            print(f"{noncd_msg}")
+            noncd_msg = ""
 
         if show_solution is True:
             display_path = path_coords
@@ -198,7 +202,7 @@ def main() -> None:
             display_path = []
         draw_real_maze(maze, display_path, wall_color, num_color)
 
-        print("\n[R]再生成 [S]経路切替 [C]色変更 [N]42・色変更 [Q]保存して終了")
+        print("\n[R]再生成 [S]経路表示 [C]色変更 [N]42・色変更 [Q]保存して終了")
         cmd = input("コマンドを入力してください: ").upper()
 
         if cmd == 'R':
@@ -216,6 +220,8 @@ def main() -> None:
             num_color = num_colors[(num_idx + 1) % len(num_colors)]
         elif cmd == 'Q':
             break
+        else:
+            noncd_msg = "無効なコマンドです。もう一度入力してください。"
 
     final_path_str, path_coords = maze.get_solution()
     output_filename = config["OUTPUT_FILE"]
