@@ -206,7 +206,7 @@ def main() -> None:
         cmd = input("コマンドを入力してください: ").upper()
 
         if cmd == 'R':
-            maze.generate(perfect=is_perfect)
+            maze.generate(is_perfect)
             path_str, path_coords = maze.get_solution()
         elif cmd == 'S':
             show_solution = not show_solution
