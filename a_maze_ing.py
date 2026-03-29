@@ -116,6 +116,9 @@ def load_config(filename: str) -> dict[str, str]:
     except FileNotFoundError:
         print(f"Error: {filename} not found.")
         sys.exit(1)
+    except PermissionError:
+        print(f"Error: Permission denied for {filename}.")
+        sys.exit(1)
 
     required_keys = [
         "WIDTH", "HEIGHT", "ENTRY", "EXIT", "OUTPUT_FILE", "PERFECT"
@@ -233,8 +236,15 @@ def main() -> None:
             noncd_msg = "無効なコマンドです。もう一度入力してください。"
 
     final_path_str, path_coords = maze.get_solution()
-    output_filename = config["OUTPUT_FILE"]
-    save_to_file(maze, output_filename, final_path_str)
+    try:
+        output_filename = config["OUTPUT_FILE"]
+        save_to_file(maze, output_filename, final_path_str)
+    except PermissionError:
+        print(f"Error: Permission denied for {config['OUTPUT_FILE']}.")
+        sys.exit(1)
+    except FileNotFoundError:
+        print(f"Error: {config['OUTPUT_FILE']} not found.")
+        sys.exit(1)
 
     print(f"\n迷路データを {output_filename} に保存しました！")
     print(f"最短経路（NSEW形式）: {final_path_str}")
