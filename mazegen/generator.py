@@ -187,7 +187,13 @@ class MazeGenerator:
 
         for diff_x, diff_y in shape_4 + shape_2:
             nx_x, nx_y = center_x + diff_x, center_y + diff_y
-            if not 0 <= nx_x < self.width and 0 <= nx_y < self.height:
+            if not 0 <= nx_x < self.width or not 0 <= nx_y < self.height:
+                return False
+            if nx_x == self.width - 1 or nx_y == self.height - 1:
+                return False
+            if nx_x == self.entry[0] and nx_y == self.entry[1]:
+                return False
+            if nx_x == self.exit_pos[0] and nx_y == self.exit_pos[1]:
                 return False
             tmp_coords.add((nx_x, nx_y))
 
