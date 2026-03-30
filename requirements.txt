@@ -1,5 +1,6 @@
-typing
-mazegen
-mypy
-pydocstyle
-flake8
+flake8==7.3.0
+mypy==1.19.1
+mypy_extensions==1.1.0
+pydocstyle==6.3.0
+typing==3.7.4.3
+typing_extensions==4.15.0
