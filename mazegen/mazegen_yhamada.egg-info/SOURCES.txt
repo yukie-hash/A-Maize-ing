@@ -1,5 +1,0 @@
-pyproject.toml
-mazegen_yhamada.egg-info/PKG-INFO
-mazegen_yhamada.egg-info/SOURCES.txt
-mazegen_yhamada.egg-info/dependency_links.txt
-mazegen_yhamada.egg-info/top_level.txt

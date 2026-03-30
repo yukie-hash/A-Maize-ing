@@ -59,7 +59,7 @@ python3 -m build
 #### 3.インストール
 ```python
 # ビルドしたものをインストール
-pip install [whl_file_pass]
+pip install [file.whl_pass]
 ```  
 
 仮想環境を抜ける際は```deactivate```コマンドを使用する。  
