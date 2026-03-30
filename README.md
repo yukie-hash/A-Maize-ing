@@ -38,8 +38,33 @@ PERFECT：   perfectな迷路か否か
 ・その理由：今回は3×3以上のスペースを作ってはいけない要件がある。穴掘り法では、外壁か他の通路とぶつかる一歩手前で通路を作るのを止める。既存通路の横から別の通路が接続することはないため、３×３以上のスペースは発生しないことが保証される。そのため穴掘り法を選択した。
 
 ## 再利用可能なコード、方法  
-`mazegen/generator`内にある`MazeGanerater`クラスはパッケージとして再利用可能である。  
-利用する場合は、リポジトリのルートで`pip install .`を実行することでインストール可能。  
+`mazegen/generator`内にある`MazeGanerater`クラスはパッケージとして再利用可能である。 
+#### パッケージのビルドと再構築の手順 
+##### 1.環境構築  
+```python
+# 仮想環境の作成と起動
+python3 -m venv .venv
+source .venv/bin/activate
+
+# ビルドツールのインストール
+pip install build
+```  
+
+#### 2.パッケージのビルド  
+pyproject.toml がある場所で実行。  
+```python
+python3 -m build
+```  
+
+#### 3.インストール
+```python
+# ビルドしたものをインストール
+pip install [whl_file_pass]
+```  
+
+仮想環境を抜ける際は```deactivate```コマンドを使用する。  
+
+#### パッケージの利用例  
 #### コード例
 ```python
 from mazegen.generator import MazeGenerator
